@@ -3,15 +3,15 @@
 ################################################################################################
 #
 # GlacierScript:  Part of the Glacier Protocol (http://glacierprotocol.org)
-# 
-# GlacierScript is designed specifically for use in the context of executing the broader Glacier 
+#
+# GlacierScript is designed specifically for use in the context of executing the broader Glacier
 # Protocol, a step-by-step procedure for high-security cold storage of Bitcoin.  It is not
 # intended to be used as standalone software.
 #
 # GlacierScript primarily replaces tasks that users would otherwise be doing manually, such as
-# typing things on the command line, copying-and-pasting strings, and hand-editing JSON.  It 
-# mostly consists of print statements, user input, string & JSON manipulation, and command-line 
-# wrappers around Bitcoin Core and other applications (e.g. those involved in reading and writing 
+# typing things on the command line, copying-and-pasting strings, and hand-editing JSON.  It
+# mostly consists of print statements, user input, string & JSON manipulation, and command-line
+# wrappers around Bitcoin Core and other applications (e.g. those involved in reading and writing
 # QR codes.)
 #
 # GlacierScript avoids cryptographic and other security-sensitive operations as much as possible.
@@ -40,6 +40,10 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
+#if SHOW_BTC_CLI set to 1 will display commands for bitcoin-cli as they are called
+SHOW_BTC_CLI=1
+#if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
+SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
 
 ################################################################################################
 #
@@ -62,7 +66,7 @@ def hash_md5(s):
 
 
 def satoshi_to_btc(satoshi):
-    """ 
+    """
     Converts a value in satoshi to a value in BTC
     outputs => Decimal
 
@@ -73,11 +77,11 @@ def satoshi_to_btc(satoshi):
 
 
 def btc_to_satoshi(btc):
-    """ 
+    """
     Converts a value in BTC to satoshi
     outputs => <int>
 
-    btc: <Decimal> or <Float> 
+    btc: <Decimal> or <Float>
     """
     value = btc * 100000000
     return int(value)
@@ -216,7 +220,7 @@ def xor_hex_strings(str1, str2):
 
 
 def hex_private_key_to_WIF_private_key(hex_key):
-    """ 
+    """
     Converts a raw 256-bit hex private key to WIF format
     returns => <string> in hex format
     """
@@ -321,7 +325,7 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
         bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
 
 def get_utxos(tx, address):
-    """ 
+    """
     Given a transaction, find all the outputs that were sent to an address
     returns => List<Dictionary> list of UTXOs in bitcoin core format
 
@@ -341,6 +345,11 @@ def get_utxos(tx, address):
 
     return utxos
 
+def bitcoin_cli_call(cmd,args):
+    full_cmd = "{0} {1} {2}".format(bitcoin_cli,cmd,args)
+    if SHOW_BTC_CLI is 1:
+        print "bitcoin cli call:{0}\n".format(full_cmd)
+    subprocess.check_output(full_cmd, shell=True).strip()
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
     """
@@ -374,8 +383,11 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     argstring = "'{0}' '{1}'".format(
         json.dumps(inputs), json.dumps(destinations))
 
-    tx_unsigned_hex = subprocess.check_output(
-        bitcoin_cli + "createrawtransaction {0}".format(argstring), shell=True).strip()
+    print "will be calling bitcoin cli with following arguments: {0}".format(argstring)
+
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction",argstring)
+    #tx_unsigned_hex = subprocess.check_output(
+    #    bitcoin_cli + "createrawtransaction {0}".format(argstring), shell=True).strip()
 
     return tx_unsigned_hex
 
@@ -387,7 +399,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     source_address: <string> input_txs will be filtered for utxos to this source address
     keys: List<string> The private keys you wish to sign with
-    redeem_script: <string> 
+    redeem_script: <string>
     unsigned_hex: <string> The unsigned transaction, in hex format
     input_txs: List<dict> A list of input transactions to use (bitcoind decoded format)
     """
@@ -409,17 +421,17 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     argstring_2 = "{0} '{1}' '{2}'".format(
         unsigned_hex, json.dumps(inputs), json.dumps(keys))
-    signed_hex = subprocess.check_output(
-        bitcoin_cli + "signrawtransaction {0}".format(argstring_2), shell=True).strip()
+    signed_hex = bitcoin_cli_call("signrawtransaction",argstring_2)
+    #signed_hex = subprocess.check_output(
+    #    bitcoin_cli + "signrawtransaction {0}".format(argstring_2), shell=True).strip()
 
     signed_tx = json.loads(signed_hex)
     return signed_tx
 
-
 def get_fee_interactive(source_address, keys, destinations, redeem_script, input_txs):
-    """ 
+    """
     Returns a recommended transaction fee, given market fee data provided by the user interactively
-    Because fees tend to be a function of transaction size, we build the transaction in order to 
+    Because fees tend to be a function of transaction size, we build the transaction in order to
     recomend a fee.
     return => <Decimal> fee value
 
@@ -475,29 +487,52 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
 ################################################################################################
 
 def write_and_verify_qr_code(name, filename, data):
-    """ 
+    """
     Write a QR code and then read it back to try and detect any tricksy malware tampering with it.
 
     name: <string> short description of the data
-    filename: <string> filename for storing the QR code
+    filename: <string> filename for storing the QR code. note that ".png" is added in the function to make incrementing easier
     data: <string> the data to be encoded
     """
 
-    subprocess.call("qrencode -o {0} {1}".format(filename, data), shell=True)
+    # could declare these as globals - eaiser to read here
+    QR_SUBDIR = "qrcodes"
+    QR_SUFFIX = ".png"
+
+    # ascertain qrcode subdir full path
+    script_root = os.path.dirname(os.path.abspath(__file__))
+    QR_DIRPATH = script_root + "/" + QR_SUBDIR
+
+    if not os.path.isdir(QR_DIRPATH):
+        #print "QR directory doesn't exist"
+        os.mkdir(QR_DIRPATH)
+
+    QR_PATH = QR_DIRPATH + "/" + filename + QR_SUFFIX
+
+    if os.path.exists(QR_PATH):
+        #print "QR exists at: {0}".format(QR_PATH)
+        i = 2
+        while os.path.exists(QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX):
+            i += 1
+        QR_PATH = QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX
+
+    #print "\nscript_root: {0}, qr dir path: {1}, qr path: {2}\n".format(script_root, QR_DIRPATH, QR_PATH)
+
+    subprocess.call("qrencode -o {0} {1}".format(QR_PATH, data), shell=True)
     check = subprocess.check_output(
-        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(filename), shell=True)
+        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(QR_PATH), shell=True)
 
     if check.strip() != data:
         print "********************************************************************"
         print "WARNING: {} QR code could not be verified properly. This could be a sign of a security breach.".format(name)
         print "********************************************************************"
 
-    print "QR code for {0} written to {1}".format(name, filename)
+    print "QR code for {0} written to {1}".format(name, QR_PATH)
 
 
 ################################################################################################
 #
-# User sanity checking 
+# User sanity checking
 #
 ################################################################################################
 
@@ -527,11 +562,19 @@ def safety_checklist():
         "Are smartphones and all other nearby devices turned off and in a Faraday bag?"]
 
     for check in checks:
-        answer = raw_input(check + " (y/n)?")
+        if SUPPRESS_VERBOSE_SAFETY_CHECKLIST is 0:
+            answer = raw_input(check + " (y/n)?")
+            if answer.upper() != "Y":
+                print "\n Safety check failed. Exiting."
+                sys.exit()
+        else:
+            print check + "\n"
+    if SUPPRESS_VERBOSE_SAFETY_CHECKLIST is 1:
+        # this could obviously be more efficient/condensed w above block
+        answer = raw_input("confirm the above (y/n): ")
         if answer.upper() != "Y":
             print "\n Safety check failed. Exiting."
             sys.exit()
-
 
 ################################################################################################
 #
@@ -548,7 +591,7 @@ def unchunk(string):
 
 
 def format_chunks(size, string):
-    """ 
+    """
     Splits a string into chunks of [size] characters, for easy human readability
     """
     tail = ""
@@ -635,8 +678,8 @@ def deposit_interactive(m, n, dice_seed_length=62, rng_seed_length=20):
     print "{}".format(results["redeemScript"])
     print ""
 
-    write_and_verify_qr_code("cold storage address", "address.png", results["address"])
-    write_and_verify_qr_code("redemption script", "redemption.png",
+    write_and_verify_qr_code("cold storage address", "address", results["address"])
+    write_and_verify_qr_code("redemption script", "redemption",
                        results["redeemScript"])
 
 
@@ -790,8 +833,85 @@ def withdraw_interactive():
     print "\nTransaction fingerprint (md5):"
     print hash_md5(signed_tx["hex"])
 
-    write_and_verify_qr_code("transaction", "transaction.png", signed_tx["hex"])
+    write_and_verify_qr_code("transaction", "transaction", signed_tx["hex"])
 
+################################################################################################
+#
+# Main "re-sign" function
+#
+################################################################################################
+
+def re_sign_interactive():
+    """
+    Sign an existing transaction (i.e. add a signature to partially signed tx) to withdaw funds from cold storage
+    All data required for transaction construction is input at the terminal
+    """
+
+    #safety_checklist()
+    ensure_bitcoind_running()
+
+    print "\nPlease paste raw transaction (hexadecimal format) with unspent outputs at the source address"
+    print "OR"
+    print "input a filename located in the current directory which contains the raw transaction data"
+    print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
+
+    hex_tx = raw_input()
+    if os.path.isfile(hex_tx):
+        hex_tx = open(hex_tx).read().strip()
+
+    tx = json.loads(subprocess.check_output(
+        bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
+
+    # inputs needed for resign based on Gavin's example:
+    #   transaction hex
+    #   for each input: txid, vout, scriptPubKey, redeemScript
+    #   key to sign with
+    # from tx hex will decode following data: redeemScript, scriptPubKey, and input transactions (txid's and vout's)
+    # for redeemScript: from vin -> first input transaction (element 0) -> txinwitness array -> find redeem script as last element (in python: element [-1])
+    redeem_script=tx["vin"][0]["txinwitness"][-1]
+    script_pub_key=tx["vout"][0]["scriptPubKey"]["hex"]
+    tx_inputs = []
+    #will not only read in txid & vout, but will add scriptPubKey & redeemScript here
+    for vin in tx["vin"]:
+        tx_inputs.append({
+            "txid": vin["txid"],
+            "vout": vin["vout"],
+            "scriptPubKey": script_pub_key,
+            "redeemScript": redeem_script
+        })
+    print "\nvariables derived from transaction hex as follows: "
+    print "\n  redeemScript: "
+    print redeem_script
+    print "\n  scriptPubKey: "
+    print script_pub_key
+    print "\n  tx_inputs: "
+    print tx_inputs
+
+    print "\nHow many private keys will you be signing this transaction with? "
+    key_count = int(raw_input("#: "))
+    keys = []
+    while len(keys) < key_count:
+        key = raw_input("Key #{0}: ".format(len(keys) + 1))
+        keys.append(key)
+
+    resign_args = "{0} '{1}' '{2}'".format(hex_tx, json.dumps(tx_inputs), json.dumps(keys))
+
+    #print "\nCalling bitcoin CLI with following arguments: {0}\n".format(resign_args)
+    bitcoin_cli_call("signrawtransaction",resign_args)
+    #resigned_hex = subprocess.check_output(bitcoin_cli + "signrawtransaction {0}".format(resign_args), shell=True).strip()
+
+    resigned_tx = json.loads(resigned_hex)
+
+    print "\nSufficient private keys to execute transaction?"
+    print resigned_tx["complete"]
+
+    print "\nRaw signed transaction (hex):"
+    print resigned_tx["hex"]
+
+    print "\nTransaction fingerprint (md5):"
+    print hash_md5(resigned_tx["hex"])
+
+    write_and_verify_qr_code("transaction", "transaction", resigned_tx["hex"])
 
 ################################################################################################
 #
@@ -804,8 +924,7 @@ def withdraw_interactive():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data'])
-
+                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code'])
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
     parser.add_argument("-d", "--dice", type=int,
@@ -816,9 +935,10 @@ if __name__ == "__main__":
         "-m", type=int, help="Number of signing keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=1)
     parser.add_argument(
         "-n", type=int, help="Number of total keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=2)
+    parser.add_argument("-q", "--qrdata", help="Data to be encoded into qr-code")
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
     args = parser.parse_args()
-
+    #consider adding args for: suppress multiple security env prompts, toggle displaying raw cli commands
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
@@ -834,3 +954,9 @@ if __name__ == "__main__":
 
     if args.program == "create-withdrawal-data":
         withdraw_interactive()
+
+    if args.program == "sign-transaction":
+        re_sign_interactive()
+
+    if args.program == "qr-code":
+        write_and_verify_qr_code("qrcode", "qrcode", args.qrdata)
