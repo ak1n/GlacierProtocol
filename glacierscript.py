@@ -321,8 +321,9 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     require_minimum_bitcoind_version(160000) # addmultisigaddress API changed in v0.16.0
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(subprocess.check_output(
-        bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
+    return json.loads(bitcoin_cli_call("addmultisigaddress",argstring))
+    #return json.loads(subprocess.check_output(
+    #    bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
 
 def get_utxos(tx, address):
     """
@@ -346,9 +347,10 @@ def get_utxos(tx, address):
     return utxos
 
 def bitcoin_cli_call(cmd,args):
-    full_cmd = "{0} {1} {2}".format(bitcoin_cli,cmd,args)
+    # note glacier has a space after bitcoind call in "bitcoin_cli" variable
+    full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
     if SHOW_BTC_CLI is 1:
-        print "bitcoin cli call:{0}\n".format(full_cmd)
+        print "bitcoin cli call:\n{0}\n".format(full_cmd)
     return subprocess.check_output(full_cmd, shell=True).strip()
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
@@ -360,6 +362,11 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     destinations: {address <string>: amount<string>} dictionary mapping destination addresses to amount in BTC
     redeem_script: <string>
     input_txs: List<dict> List of input transactions in dictionary form (bitcoind decoded format)
+
+    ak1n comments:
+        note that variable redeem_script never used - Adresen example uses but in contex of fund-the-multisig not yet sent
+        note that amount in destinations
+
     """
     ensure_bitcoind_running()
 
@@ -402,6 +409,12 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     redeem_script: <string>
     unsigned_hex: <string> The unsigned transaction, in hex format
     input_txs: List<dict> A list of input transactions to use (bitcoind decoded format)
+
+    ak1n comments:
+      why is amount needed?
+        this is not used in Andresen example (which uses hex, txid, vout, scriptPubKey, redeem, key)
+        amount should have been defined in the create transaction function & call (in destinations variable)
+        thus should be contained in the unsigned hex
     """
 
     # For each UTXO used as input, we need the txid, vout index, scriptPubKey, amount, and redeemScript
