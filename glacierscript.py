@@ -393,7 +393,7 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     argstring = "'{0}' '{1}'".format(
         json.dumps(inputs), json.dumps(destinations))
 
-    print "will be calling bitcoin cli with following arguments: {0}".format(argstring)
+    #print "will be calling bitcoin cli with following arguments: {0}".format(argstring)
 
     tx_unsigned_hex = bitcoin_cli_call("createrawtransaction",argstring)
     #tx_unsigned_hex = subprocess.check_output(
@@ -750,7 +750,7 @@ def withdraw_interactive():
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
 
-            tx = bitcoin_cli_call("decoderawtransaction",hex_tx)
+            tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
             #tx = json.loads(subprocess.check_output(
             #    bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
             txs.append(tx)
@@ -861,17 +861,6 @@ def withdraw_interactive():
 # Main "re-sign" function
 #
 ################################################################################################
-
-def re_sign_call(txhex,inputs,keys):
-    # in progress - reconciling these bitcoin-cli calls vs. gavin's/bitcoin.org
-    # made separate function to make clear necessary variables
-    sargs = "'{0}' '{2}' '{3}'".format(txhex,inputs,keys)
-    bitcoin_cli_call("signrawtransaction",sargs)
-    # where format as follows for 1 input transaction & 1 key
-    #   input format: [{"txid":tx_id,"vout":vout,"scriptPubKey":scriptPubKey,"redeemScript":redeemScript}]
-    #     vars needed: txid, vout, scriptPubKey, redeemScript
-    #   keys format: ["key1"]
-    # should return hex & "complete" (false if incomplete, true if enough sigs to complete)
 
 def re_sign_interactive():
     """
