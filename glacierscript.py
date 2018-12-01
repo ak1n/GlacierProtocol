@@ -349,9 +349,11 @@ def get_utxos(tx, address):
 def bitcoin_cli_call(cmd,args):
     # note glacier has a space after bitcoind call in "bitcoin_cli" variable
     full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
+    cmd_output = subprocess.check_output(full_cmd, shell=True).strip()
     if SHOW_BTC_CLI is 1:
-        print "bitcoin cli call:\n{0}\n".format(full_cmd)
-    return subprocess.check_output(full_cmd, shell=True).strip()
+        print "\nbitcoin cli call:\n{0}\n".format(full_cmd)
+        print "cli output:\n{0}\n\n".format(cmd_output)
+    return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
     """
@@ -476,8 +478,9 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
+        decoded_tx = bitcoin_cli_call("decoderawtransaction",signed_tx["hex"])
+        #decoded_tx = json.loads(subprocess.check_output(
+        #        bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
         size = decoded_tx["vsize"]
 
         fee = size * fee_basis_satoshis_per_byte
@@ -747,8 +750,9 @@ def withdraw_interactive():
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
 
-            tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
+            tx = bitcoin_cli_call("decoderawtransaction",hex_tx)
+            #tx = json.loads(subprocess.check_output(
+            #    bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
             txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
@@ -890,8 +894,9 @@ def re_sign_interactive():
     if os.path.isfile(hex_tx):
         hex_tx = open(hex_tx).read().strip()
 
-    tx = json.loads(subprocess.check_output(
-        bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
+    tx = bitcoin_cli_call("decoderawtransaction",hex_tx)
+    #tx = json.loads(subprocess.check_output(
+    #    bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
 
     # inputs needed for resign based on Gavin's example:
     #   transaction hex
