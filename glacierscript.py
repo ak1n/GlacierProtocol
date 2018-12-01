@@ -365,6 +365,7 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
 
     ak1n comments:
         note that variable redeem_script never used - Adresen example uses but in contex of fund-the-multisig not yet sent
+        bitcoin.org example doesn't use in transaction creation
         note that amount in destinations
 
     """
@@ -412,9 +413,12 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     ak1n comments:
       why is amount needed?
-        this is not used in Andresen example (which uses hex, txid, vout, scriptPubKey, redeem, key)
+        not used in Andresen/bitcoin.org examples
+          both use hex, tx data (txid, vout, scriptPubKey, redeemScript), signing key
+          bitcoin.org example: https://bitcoin.org/en/developer-examples#p2sh-multisig
         amount should have been defined in the create transaction function & call (in destinations variable)
         thus should be contained in the unsigned hex
+        amount commented out
     """
 
     # For each UTXO used as input, we need the txid, vout index, scriptPubKey, amount, and redeemScript
@@ -427,7 +431,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
             inputs.append({
                 "txid": txid,
                 "vout": int(utxo["n"]),
-                "amount": utxo["value"],
+                #"amount": utxo["value"],
                 "scriptPubKey": utxo["scriptPubKey"]["hex"],
                 "redeemScript": redeem_script
             })
@@ -855,7 +859,7 @@ def withdraw_interactive():
 ################################################################################################
 
 def re_sign_call(txhex,inputs,keys):
-    # in progress - reconciling these bitcoin-cli calls vs. gavin's
+    # in progress - reconciling these bitcoin-cli calls vs. gavin's/bitcoin.org
     # made separate function to make clear necessary variables
     sargs = "'{0}' '{2}' '{3}'".format(txhex,inputs,keys)
     bitcoin_cli_call("signrawtransaction",sargs)
@@ -869,6 +873,9 @@ def re_sign_interactive():
     """
     Sign an existing transaction (i.e. add a signature to partially signed tx) to withdaw funds from cold storage
     All data required for transaction construction is input at the terminal
+
+    ak1n notes:
+      if can script out source address & input transactions from hex then can consolidate code and simply call existing sign transaction function rather than have a lot of duplicate code in this function
     """
 
     #safety_checklist()
