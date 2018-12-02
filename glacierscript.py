@@ -21,6 +21,11 @@
 # - qrencode (QR code writer: http://packages.ubuntu.com/xenial/qrencode)
 # - zbarimg (QR code reader: http://packages.ubuntu.com/xenial/zbar-tools)
 #
+# testing pre-recs:
+#   for online computers for which you don't want to be downloading whole blockchain:
+#     add-to or create in ~/.bitcoin/bitcoin.conf: connect=127.0.0.1:8333
+#   fedora packages: zbar qrencode
+#
 ################################################################################################
 
 # standard Python libraries
@@ -260,6 +265,9 @@ def ensure_bitcoind_running():
     # 2. Remove this -deprecatedrpc=signrawtransaction
     # 3. Change getaddressesbyaccount to getaddressesbylabel
     # 4. Remove this -deprecatedrpc=accounts
+
+    #bitcoin_cli_call()
+
     subprocess.call(bitcoind + "-daemon -connect=0.0.0.0 -deprecatedrpc=signrawtransaction -deprecatedrpc=accounts",
                     shell=True, stdout=devnull, stderr=devnull)
 
@@ -267,6 +275,7 @@ def ensure_bitcoind_running():
     times = 0
     while times <= 20:
         times += 1
+        #print "will be trying following cmd:\n{0} getnetworkinfo\n".format(bitcoin_cli)
         if subprocess.call(bitcoin_cli + "getnetworkinfo", shell=True, stdout=devnull, stderr=devnull) == 0:
             return
         time.sleep(0.5)
