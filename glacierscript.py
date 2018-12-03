@@ -928,10 +928,10 @@ def re_sign_interactive():
         key = raw_input("Key #{0}: ".format(len(keys) + 1))
         keys.append(key)
 
-    resign_args = "{0} '{1}' '{2}'".format(hex_tx, json.dumps(tx_inputs), json.dumps(keys))
+    resign_args = "'{0}' '{1}' '{2}'".format(hex_tx, json.dumps(tx_inputs), json.dumps(keys))
 
     #print "\nCalling bitcoin CLI with following arguments: {0}\n".format(resign_args)
-    bitcoin_cli_call("signrawtransaction",resign_args)
+    resign_hex = bitcoin_cli_call("signrawtransaction",resign_args)
     #resigned_hex = subprocess.check_output(bitcoin_cli + "signrawtransaction {0}".format(resign_args), shell=True).strip()
 
     resigned_tx = json.loads(resigned_hex)
