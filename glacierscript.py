@@ -357,11 +357,12 @@ def get_utxos(tx, address):
 
 def bitcoin_cli_call(cmd,args):
     # note glacier has a space after bitcoind call in "bitcoin_cli" variable
+    # need to double check 1 to 2 spacing
     full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
     cmd_output = subprocess.check_output(full_cmd, shell=True).strip()
     if SHOW_BTC_CLI is 1:
-        print "\nbitcoin cli call:\n{0}\n".format(full_cmd)
-        print "cli output:\n{0}\n\n".format(cmd_output)
+        print "\nbitcoin cli call:\n {0} \n".format(full_cmd)
+        print "\ncli output:\n {0} \n\n".format(cmd_output)
     return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
