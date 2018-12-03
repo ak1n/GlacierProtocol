@@ -430,6 +430,17 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
         amount should have been defined in the create transaction function & call (in destinations variable)
         thus should be contained in the unsigned hex
         amount commented out
+      IF REMOVE AMOUNT script crashes w:
+      bitcoin-cli createrawtransaction '[{"vout": 0, "txid": "c48ceaa706935e44e26cc2bbac182a8f6f4c9ed7eafe890cd6b3d8d0bb88e9f5"}]' '{"3H7VN9ikV7FoEHifeY6wArdJ5ew97k7Reu": 0, "bc1qmhmer7p9pvm3m50nw48alw0f552ng8kguagjgn": 0}'
+
+cli output:
+0200000001f5e988bbd0d8b3d60c89feead79e4c6f8f2a18acbbc26ce2445e9306a7ea8cc40000000000ffffffff02000000000000000017a914a92ac6e0099c2a54bf096a4df7e2309af85824df870000000000000000160014ddf791f8250b371dd1f3754fdfb9e9a515341ec800000000
+
+
+error code: -3
+error message:
+Missing amount for CTxOut(nValue=21000000.00000000, scriptPubKey=a914a92ac6e0099c2a54bf096a4df7)
+
     """
 
     # For each UTXO used as input, we need the txid, vout index, scriptPubKey, amount, and redeemScript
@@ -442,7 +453,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
             inputs.append({
                 "txid": txid,
                 "vout": int(utxo["n"]),
-                #"amount": utxo["value"],
+                "amount": utxo["value"],
                 "scriptPubKey": utxo["scriptPubKey"]["hex"],
                 "redeemScript": redeem_script
             })
@@ -487,7 +498,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = bitcoin_cli_call("decoderawtransaction",signed_tx["hex"])
+        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction",signed_tx["hex"]))
         #decoded_tx = json.loads(subprocess.check_output(
         #        bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
         size = decoded_tx["vsize"]
@@ -892,7 +903,7 @@ def re_sign_interactive():
     if os.path.isfile(hex_tx):
         hex_tx = open(hex_tx).read().strip()
 
-    tx = bitcoin_cli_call("decoderawtransaction",hex_tx)
+    tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
     #tx = json.loads(subprocess.check_output(
     #    bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
 
