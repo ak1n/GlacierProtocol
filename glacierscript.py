@@ -747,11 +747,11 @@ def withdraw_interactive():
             print "input a filename located in the current directory which contains the raw transaction data"
             print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
 
-            hex_tx = raw_input()
-            if os.path.isfile(hex_tx):
-                hex_tx = open(hex_tx).read().strip()
+            part_signed_hex_tx = raw_input()
+            if os.path.isfile(part_signed_hex_tx):
+                part_signed_hex_tx = open(part_signed_hex_tx).read().strip()
 
-            part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
+            part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
 
             # the following assignments may not hold universally - need either interactive verification or manual input once verify re-sign works with current testing setup
             redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
@@ -759,8 +759,8 @@ def withdraw_interactive():
             source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
             dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
             num_tx = len(part_signed_tx["vin"])
-            change_amount = part_signed_tx["vout"][0]["value"]
-            withdrawal_amount = part_signed_tx["vout"][1]["value"]
+            change_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
+            withdrawal_amount = Decimal(part_signed_tx["vout"][1]["value"]).quantize(SATOSHI_PLACES)
 
         if RE_SIGN_MODE is not 1:
             source_address = raw_input("\nSource cold storage address: ")
@@ -856,7 +856,8 @@ def withdraw_interactive():
 
         # else = re-sign mode where the above block is not needed bcz can get var data from hex
         else:
-            fee = input_amount - input_amount - withdrawal_amount - change_amount
+            print "amount variable types are: input: {0}, withdrawal: {1}, change: {2}".format(type(input_amount),type(withdrawal_amount),type(change_amount))
+            fee = input_amount - withdrawal_amount - change_amount
 
         addresses[dest_address] = str(withdrawal_amount)
         addresses[source_address] = str(change_amount)
@@ -905,9 +906,10 @@ def withdraw_interactive():
                 "scriptPubKey": utxo["scriptPubKey"]["hex"],
                 "redeemScript": redeem_script
             })
-        resign_args = "{0} '{1}' '{2}'".format(part_signed_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
-        print "\nCalling bitcoin CLI with following arguments: {0}\n".format(resign_args)
-        resign_hex = bitcoin_cli_call("signrawtransaction",resign_args)
+        print "\n\nvars to be passed for re-sign args:\npart_sign hex:\n{0}\n\ninputs:\n{1}\n\nkeys:\n{2}\n\n".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
+        resign_args = "{0} '{1}' '{2}'".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
+        #print "\nCalling bitcoin CLI with following arguments: {0}\n".format(resign_args)
+        signed_tx = json.loads(bitcoin_cli_call("signrawtransaction",resign_args))
 
     print "\nSufficient private keys to execute transaction?"
     print signed_tx["complete"]
