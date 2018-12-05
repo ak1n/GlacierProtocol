@@ -40,6 +40,8 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
+SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
+#if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 
 ################################################################################################
 #
@@ -541,11 +543,19 @@ def safety_checklist():
         "Are smartphones and all other nearby devices turned off and in a Faraday bag?"]
 
     for check in checks:
-        answer = raw_input(check + " (y/n)?")
+        if SUPPRESS_VERBOSE_SAFETY_CHECKLIST is 0:
+            answer = raw_input(check + " (y/n)?")
+            if answer.upper() != "Y":
+                print "\n Safety check failed. Exiting."
+                sys.exit()
+        else:
+            print check + "\n"
+    if SUPPRESS_VERBOSE_SAFETY_CHECKLIST is 1:
+        # this could obviously be more efficient/condensed w above block
+        answer = raw_input("confirm the above (y/n): ")
         if answer.upper() != "Y":
             print "\n Safety check failed. Exiting."
             sys.exit()
-
 
 ################################################################################################
 #
