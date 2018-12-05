@@ -495,7 +495,7 @@ def write_and_verify_qr_code(name, filename, data):
     Write a QR code and then read it back to try and detect any tricksy malware tampering with it.
 
     name: <string> short description of the data
-    filename: <string> filename for storing the QR code
+    filename: <string> filename for storing the QR code. note that ".png" is added in function to make incrementing easier
     data: <string> the data to be encoded
     """
 
