@@ -49,7 +49,7 @@ SATOSHI_PLACES = Decimal("0.00000001")
 SHOW_BTC_CLI=1
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
-
+#RE_SIGN_MODE is a global toggle for the withdraw interactive function to (when =1) sign a partially signed (rather than newly created) transaction
 RE_SIGN_MODE=0
 
 ################################################################################################
@@ -774,7 +774,14 @@ def withdraw_interactive():
             print "\ndestination address: {0}".format(dest_address)
             print "\nnumber of transactions: {0}".format(num_tx)
             print "\nchange amount: {0}".format(change_amount)
-            print "\withdrawal amount: {0}".format(withdrawal_amount)
+            print "\nwithdrawal amount: {0}".format(withdrawal_amount)
+
+            print "\n\nplease confirm whether above data is correct"
+            confirm = yes_no_interactive()
+            if not confirm:
+                print "auto parsed data from transaction incorrect so aborting"
+                sys.exit()
+                # consider allow manual override here, with caveat that transaction may be invalid if not properly constructed from manual data
 
         addresses[source_address] = 0
         addresses[dest_address] = 0
