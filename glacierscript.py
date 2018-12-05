@@ -40,10 +40,10 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
-SHOW_BTC_CLI=1
+SHOW_BTC_CLI=0
 #if SHOW_BTC_CLI set to 1 will display commands for bitcoin-cli as they are called
 
-SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
+SUPPRESS_VERBOSE_SAFETY_CHECKLIST=0
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 
 RE_SIGN_MODE=0
@@ -912,8 +912,13 @@ if __name__ == "__main__":
         "-n", type=int, help="Number of total keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=2)
     parser.add_argument("-q", "--qrdata", help="Data to be encoded into qr-code")
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
+    parser.add_argument('-v', action='store_const',
+                        default=0,
+                        dest='SHOW_BTC_CLI',
+                        const='1',
+                        help='increase output verbosity including showing bitcoin-cli calls/outputs')
     args = parser.parse_args()
-
+    SHOW_BTC_CLI = args.SHOW_BTC_CLI
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
