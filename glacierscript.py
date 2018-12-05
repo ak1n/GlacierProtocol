@@ -46,6 +46,9 @@ SHOW_BTC_CLI=1
 SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 
+RE_SIGN_MODE=0
+#RE_SIGN_MODE is a global toggle for the withdraw interactive function to (when =1) sign a partially signed (rather than newly created) transaction
+
 ################################################################################################
 #
 # Minor helper functions
@@ -701,22 +704,58 @@ def withdraw_interactive():
         print "\nYou will need to enter several pieces of information to create a withdrawal transaction."
         print "\n\n*** PLEASE BE SURE TO ENTER THE CORRECT DESTINATION ADDRESS ***\n"
 
-        source_address = raw_input("\nSource cold storage address: ")
+        if RE_SIGN_MODE is not 1:
+            source_address = raw_input("\nSource cold storage address: ")
+            redeem_script = raw_input("\nRedemption script for source cold storage address: ")
+            dest_address = raw_input("\nDestination address: ")
+            num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
+        else:
+            print "\nPlease paste the partially-signed raw transaction (hexadecimal format) with unspent outputs at the source address"
+            print "OR"
+            print "input a filename located in the current directory which contains the raw transaction data"
+            print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
+
+            part_signed_hex_tx = raw_input()
+            if os.path.isfile(part_signed_hex_tx):
+                part_signed_hex_tx = open(part_signed_hex_tx).read().strip()
+
+            part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
+
+            ####### decode data/variables from partially signed tx #######
+            # the following assignments may not hold universally - need either interactive verification or manual input once verify re-sign works with current testing setup
+            redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
+            script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
+            source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+            dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
+            num_tx = len(part_signed_tx["vin"])
+            change_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
+            withdrawal_amount = Decimal(part_signed_tx["vout"][1]["value"]).quantize(SATOSHI_PLACES)
+            ####### end decode data/variables from partially signed tx #######
+
+            print"\nfollowing variables parsed from partially signed hex input:"
+            print "\nsource_address: {0}".format(source_address)
+            print "\nredemption script: {0}".format(redeem_script)
+            print "\ndestination address: {0}".format(dest_address)
+            print "\nnumber of transactions: {0}".format(num_tx)
+            print "\nchange amount: {0}".format(change_amount)
+            print "\nwithdrawal amount: {0}".format(withdrawal_amount)
+
+            print "\n\nplease confirm whether above data is correct"
+            confirm = yes_no_interactive()
+            if not confirm:
+                print "auto parsed data from transaction incorrect so aborting"
+                sys.exit()
+                # consider allow manual override here, with caveat that transaction may be invalid if not properly constructed from manual data
+
         addresses[source_address] = 0
-
-        redeem_script = raw_input("\nRedemption script for source cold storage address: ")
-
-        dest_address = raw_input("\nDestination address: ")
         addresses[dest_address] = 0
 
-        num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
-
-        txs = []
+        input_txs = []
         utxos = []
         utxo_sum = Decimal(0).quantize(SATOSHI_PLACES)
 
-        while len(txs) < num_tx:
-            print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(txs) + 1)
+        while len(input_txs) < num_tx:
+            print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(input_txs) + 1)
             print "OR"
             print "input a filename located in the current directory which contains the raw transaction data"
             print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
@@ -726,7 +765,7 @@ def withdraw_interactive():
                 hex_tx = open(hex_tx).read().strip()
 
             tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
-            txs.append(tx)
+            input_txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
         if len(utxos) == 0:
@@ -752,36 +791,41 @@ def withdraw_interactive():
         ###### fees, amount, and change #######
 
         input_amount = utxo_sum
-        fee = get_fee_interactive(
-            source_address, keys, addresses, redeem_script, txs)
-        # Got this far
-        if fee > input_amount:
-            print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
-            sys.exit()
+        if RE_SIGN_MODE is not 1:
+            fee = get_fee_interactive(
+                source_address, keys, addresses, redeem_script, input_txs)
 
-        print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
-        print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
-        print "\nAfter a fee of {0}, you have {1} bitcoins available to withdraw.".format(fee, input_amount - fee)
-        print "\n*** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***\n"
-        withdrawal_amount = raw_input(
-            "Amount to send to {0} (leave blank to withdraw all funds stored in these unspent transactions): ".format(dest_address))
-        if withdrawal_amount == "":
-            withdrawal_amount = input_amount - fee
+            if fee > input_amount:
+                print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
+                sys.exit()
+
+            print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
+            print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
+            print "\nAfter a fee of {0}, you have {1} bitcoins available to withdraw.".format(fee, input_amount - fee)
+            print "\n*** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***\n"
+            withdrawal_amount = raw_input(
+                "Amount to send to {0} (leave blank to withdraw all funds stored in these unspent transactions): ".format(dest_address))
+            if withdrawal_amount == "":
+                withdrawal_amount = input_amount - fee
+            else:
+                withdrawal_amount = Decimal(withdrawal_amount).quantize(SATOSHI_PLACES)
+
+            if fee + withdrawal_amount > input_amount:
+                print "Error: fee + withdrawal amount greater than total amount available from unspent transactions"
+                raise Exception("Output values greater than input value")
+
+            change_amount = input_amount - withdrawal_amount - fee
+
+            # less than a satoshi due to weird floating point imprecision
+            if change_amount < 1e-8:
+                change_amount = 0
+
+            if change_amount > 0:
+                print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
         else:
-            withdrawal_amount = Decimal(withdrawal_amount).quantize(SATOSHI_PLACES)
-
-        if fee + withdrawal_amount > input_amount:
-            print "Error: fee + withdrawal amount greater than total amount available from unspent transactions"
-            raise Exception("Output values greater than input value")
-
-        change_amount = input_amount - withdrawal_amount - fee
-
-        # less than a satoshi due to weird floating point imprecision
-        if change_amount < 1e-8:
-            change_amount = 0
-
-        if change_amount > 0:
-            print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
+            # else: re-sign mode where the above block is not needed bcz can get var data from hex & calculate the fee used in initial sign based on input, withdrawal, and change amounts
+            print "amount variable types are: input: {0}, withdrawal: {1}, change: {2}".format(type(input_amount),type(withdrawal_amount),type(change_amount))
+            fee = input_amount - withdrawal_amount - change_amount
 
         addresses[dest_address] = str(withdrawal_amount)
         addresses[source_address] = str(change_amount)
@@ -812,11 +856,25 @@ def withdraw_interactive():
     #### Calculate Transaction ####
     print "\nCalculating transaction...\n"
 
-    unsigned_tx = create_unsigned_transaction(
-        source_address, addresses, redeem_script, txs)
+    if RE_SIGN_MODE is not 1:
+        unsigned_tx = create_unsigned_transaction(
+            source_address, addresses, redeem_script, input_txs)
 
-    signed_tx = sign_transaction(source_address, keys,
-                                 redeem_script, unsigned_tx, txs)
+        signed_tx = sign_transaction(source_address, keys,
+                                     redeem_script, unsigned_tx, input_txs)
+    else:
+        re_sign_input_txs = []
+        txid = tx["txid"]
+        for utxo in utxos:
+            re_sign_input_txs.append({
+                "txid": txid,
+                "vout": int(utxo["n"]),
+                "amount": utxo["value"],
+                "scriptPubKey": utxo["scriptPubKey"]["hex"],
+                "redeemScript": redeem_script
+            })
+        resign_args = "{0} '{1}' '{2}'".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
+        signed_tx = json.loads(bitcoin_cli_call("signrawtransaction",resign_args))
 
     print "\nSufficient private keys to execute transaction?"
     print signed_tx["complete"]
@@ -829,7 +887,6 @@ def withdraw_interactive():
 
     write_and_verify_qr_code("transaction", "transaction", signed_tx["hex"])
 
-
 ################################################################################################
 #
 # main function
@@ -841,7 +898,7 @@ def withdraw_interactive():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'qr-code'])
+                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code'])
 
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
@@ -871,6 +928,11 @@ if __name__ == "__main__":
         deposit_interactive(args.m, args.n, args.dice, args.rng)
 
     if args.program == "create-withdrawal-data":
+        withdraw_interactive()
+
+    if args.program == "sign-transaction":
+        # Sign an existing transaction (i.e. add a signature to partially signed tx) to withdaw funds from cold storage
+        RE_SIGN_MODE = 1
         withdraw_interactive()
 
     if args.program == "qr-code":
