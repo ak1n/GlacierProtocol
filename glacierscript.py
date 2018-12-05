@@ -364,6 +364,7 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     source_address: <string> input_txs will be filtered for utxos to this source address
     destinations: {address <string>: amount<string>} dictionary mapping destination addresses to amount in BTC
     redeem_script: <string>
+      ak1n notes: note that this is never used in this function
     input_txs: List<dict> List of input transactions in dictionary form (bitcoind decoded format)
     """
     ensure_bitcoind_running()
@@ -403,6 +404,11 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     redeem_script: <string>
     unsigned_hex: <string> The unsigned transaction, in hex format
     input_txs: List<dict> A list of input transactions to use (bitcoind decoded format)
+
+    ak1n comments / notes:
+      - amount is required and script fails without amounts in inputs
+      - examples (e.g. bitcoin.org & Andresen multisig) don't use - should be in createtransaction calls (then contained in hex passed to sign). however seems like changes since those examples were written
+
     """
 
     # For each UTXO used as input, we need the txid, vout index, scriptPubKey, amount, and redeemScript
