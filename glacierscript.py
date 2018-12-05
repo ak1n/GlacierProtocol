@@ -40,6 +40,9 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
+SHOW_BTC_CLI=1
+#if SHOW_BTC_CLI set to 1 will display commands for bitcoin-cli as they are called
+
 SUPPRESS_VERBOSE_SAFETY_CHECKLIST=1
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 
@@ -319,8 +322,7 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     require_minimum_bitcoind_version(160000) # addmultisigaddress API changed in v0.16.0
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(subprocess.check_output(
-        bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
+    return json.loads(bitcoin_cli_call("addmultisigaddress",argstring))
 
 def get_utxos(tx, address):
     """
@@ -343,6 +345,16 @@ def get_utxos(tx, address):
 
     return utxos
 
+def bitcoin_cli_call(cmd,args):
+    # note glacier has a space after bitcoind call in "bitcoin_cli" variable
+    # need to double check 1 to 2 spacing
+    full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
+    if SHOW_BTC_CLI is 1:
+        print "\nbitcoin cli call:\n {0} \n".format(full_cmd)
+    cmd_output = subprocess.check_output(full_cmd, shell=True).strip()
+    if SHOW_BTC_CLI is 1:
+        print "\ncli output:\n {0} \n\n".format(cmd_output)
+    return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
     """
@@ -376,8 +388,7 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     argstring = "'{0}' '{1}'".format(
         json.dumps(inputs), json.dumps(destinations))
 
-    tx_unsigned_hex = subprocess.check_output(
-        bitcoin_cli + "createrawtransaction {0}".format(argstring), shell=True).strip()
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction",argstring)
 
     return tx_unsigned_hex
 
@@ -411,9 +422,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     argstring_2 = "{0} '{1}' '{2}'".format(
         unsigned_hex, json.dumps(inputs), json.dumps(keys))
-    signed_hex = subprocess.check_output(
-        bitcoin_cli + "signrawtransaction {0}".format(argstring_2), shell=True).strip()
-
+    signed_hex = bitcoin_cli_call("signrawtransaction",argstring_2)
     signed_tx = json.loads(signed_hex)
     return signed_tx
 
@@ -449,8 +458,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
+        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction",signed_tx["hex"]))
         size = decoded_tx["vsize"]
 
         fee = size * fee_basis_satoshis_per_byte
@@ -711,8 +719,7 @@ def withdraw_interactive():
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
 
-            tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
+            tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
             txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
