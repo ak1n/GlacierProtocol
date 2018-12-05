@@ -917,14 +917,23 @@ if __name__ == "__main__":
                         dest='SHOW_BTC_CLI',
                         const='1',
                         help='increase output verbosity including showing bitcoin-cli calls/outputs')
+    parser.add_argument('-s', action='store_const',
+                        default=0,
+                        dest='SUPPRESS_VERBOSE_SAFETY_CHECKLIST',
+                        const='1',
+                        help='suppress verbose safety checklist - give only single combined y/n for checklist rather than prompting for each safety check item (useful if running script for development/testing)')
     args = parser.parse_args()
+
     SHOW_BTC_CLI = args.SHOW_BTC_CLI
+    SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
     wif_prefix = "EF" if args.testnet else "80"
     bitcoind = "bitcoind " + cli_args
     bitcoin_cli = "bitcoin-cli " + cli_args
+
+    #print "\ninput toggles are: SHOW_BTC_CLI={0}, SUPPRESS_VERBOSE_SAFETY_CHECKLIST={1}\n".format(SHOW_BTC_CLI,SUPPRESS_VERBOSE_SAFETY_CHECKLIST)
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
