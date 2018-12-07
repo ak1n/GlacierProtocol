@@ -916,12 +916,12 @@ if __name__ == "__main__":
     parser.add_argument('-v', action='store_const',
                         default=0,
                         dest='SHOW_BTC_CLI',
-                        const='1',
+                        const=1,
                         help='increase output verbosity including showing bitcoin-cli calls/outputs')
     parser.add_argument('-s', action='store_const',
                         default=0,
                         dest='SUPPRESS_VERBOSE_SAFETY_CHECKLIST',
-                        const='1',
+                        const=1,
                         help='suppress verbose safety checklist - give only single combined y/n for checklist rather than prompting for each safety check item (useful if running script for development/testing)')
     args = parser.parse_args()
 
