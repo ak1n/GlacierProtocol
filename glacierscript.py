@@ -49,6 +49,9 @@ SUPPRESS_VERBOSE_SAFETY_CHECKLIST=0
 RE_SIGN_MODE=0
 #RE_SIGN_MODE is a global toggle for the withdraw interactive function to (when =1) sign a partially signed (rather than newly created) transaction
 
+USING_TAILS=0
+#USING_TAILS is set to 1 if using the Tails operating system
+
 ################################################################################################
 #
 # Minor helper functions
@@ -90,6 +93,9 @@ def btc_to_satoshi(btc):
     value = btc * 100000000
     return int(value)
 
+def btc_to_mbtc(btc)
+    mbtc = Decimal(btc)/1000
+    return mbtc.quantize(SATOSHI_PLACES)
 
 ################################################################################################
 #
@@ -476,7 +482,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         if fee > MAX_FEE:
             print "Calculated fee ({}) is too high. Must be under {}".format(fee, MAX_FEE)
         else:
-            print "\nBased on the provided rate, the fee will be {} bitcoin.".format(fee)
+            print "\nBased on the provided rate, the fee will be {0} bitcoin = {1} mBTC.".format(fee,btc_to_mbtc(fee))
             confirm = yes_no_interactive()
 
             if confirm:
@@ -890,6 +896,29 @@ def withdraw_interactive():
 
 ################################################################################################
 #
+# Main "install" function
+#
+################################################################################################
+
+def install_software(deb_dir,bitcoin_dir):
+    print "\ninstall function called w following directories:"
+    print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n"
+
+    # directory validation here - ensure directories & debs exist
+    # user validation here: call yes/no verification function for user to review data
+
+    subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
+    subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}}/bin/*".format(deb_dir), shell=True)
+
+    if USING_TAILS is 1:
+        print "because using tails, manually opening port for bitcoind to locally listen on"
+        subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
+        # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
+
+        # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
+
+################################################################################################
+#
 # main function
 #
 # Show help, or execute one of the three main routines: entropy, deposit, withdraw
@@ -923,10 +952,17 @@ if __name__ == "__main__":
                         dest='SUPPRESS_VERBOSE_SAFETY_CHECKLIST',
                         const=1,
                         help='suppress verbose safety checklist - give only single combined y/n for checklist rather than prompting for each safety check item (useful if running script for development/testing)')
+    parser.add_argument('-t', action='store_const',
+                        default=0,
+                        dest='USING_TAILS',
+                        const=1,
+                        help='indicate using tails operating system - has implications for properly starting bitcoind (requires opening of listening port manually with install command)')
     args = parser.parse_args()
 
+    # set global toggles from command line flags
     SHOW_BTC_CLI = args.SHOW_BTC_CLI
     SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
+    USING_TAILS = args.USING_TAILS
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
