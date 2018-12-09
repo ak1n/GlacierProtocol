@@ -959,7 +959,7 @@ def install_software(deb_dir,btc_dir):
         # should create file verification here (ensure debs & bitcoin actually exist)
         # should create user validation here: call yes/no verification function for user to review data
         subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
-        subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}/bin/*".format(btc_dir), shell=True)
+        subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
 
         if USING_TAILS is 1:
             print "because using tails, manually opening port for bitcoind to locally listen on"
