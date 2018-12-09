@@ -93,8 +93,8 @@ def btc_to_satoshi(btc):
     value = btc * 100000000
     return int(value)
 
-def btc_to_mbtc(btc)
-    mbtc = Decimal(btc)/1000
+def btc_to_mbtc(btc):
+    mbtc = Decimal(btc)*1000
     return mbtc.quantize(SATOSHI_PLACES)
 
 ################################################################################################
@@ -736,30 +736,50 @@ def withdraw_interactive():
             script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
             #source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
             #  index for source address I think should be either 0 or 1
-            dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
+            #dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
             num_tx = len(part_signed_tx["vin"])
-            change_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
-            withdrawal_amount = Decimal(part_signed_tx["vout"][1]["value"]).quantize(SATOSHI_PLACES)
-            ####### end decode data/variables from partially signed tx #######
 
             # find source address position in vin & vout
             cold_storage_vout_index = -1
-            for i in len(part_signed_tx["vout"]):
-                if(part_signed_tx["vout"] == source_address):
-                    cold_storage_vout_index = part_signed_tx["vout"]["n"]
-                    break
+            destination_vout_index = -1
+            i = 0
+
+            for output in part_signed_tx["vout"]:
+                for address in output["scriptPubKey"]["addresses"]:
+                    #print "\ni={0}, address: {1}".format(i,address)
+                    if address == source_address:
+                        #print "\nfound cold storage address at index {0}".format(i)
+                        cold_storage_vout_index = i
+                        break
+                i += 1
+
             if cold_storage_vout_index is -1:
                 print "could not find cold storage source address in partially signed transaction hex! exiting..."
                 sys.exit()
-            else print "\nfound cold storage address at vout index point {0}".format(cold_storage_vout_index)
+            #else: print "\nfound cold storage address at vout index point {0}".format(cold_storage_vout_index)
+
+            # assuming:
+            #   vout contains source and destination addresses in array positions 0 & 1
+            #   address found in first element of "addresses" array
+            if cold_storage_vout_index == 0:
+                destination_vout_index = 1
+            else:
+                destination_vout_index = 0
+            dest_address = part_signed_tx["vout"][destination_vout_index]["scriptPubKey"]["addresses"][0]
+
+            # now parse out amounts knowing array positions of source/destination vouts
+            change_amount = Decimal(part_signed_tx["vout"][cold_storage_vout_index]["value"]).quantize(SATOSHI_PLACES)
+            withdrawal_amount = Decimal(part_signed_tx["vout"][destination_vout_index]["value"]).quantize(SATOSHI_PLACES)
+
+            ####### end decode data/variables from partially signed tx #######
 
             print"\nfollowing variables parsed from partially signed hex input:"
-            print "\ncold storage / source_address: {0}".format(source_address)
-            print "\nredemption script: {0}".format(redeem_script)
-            print "\ndestination address: {0}".format(dest_address)
-            print "\nnumber of transactions: {0}".format(num_tx)
-            print "\nchange amount: {0}".format(change_amount)
-            print "\nwithdrawal amount: {0}".format(withdrawal_amount)
+            print "\n    cold storage / source_address: {0}".format(source_address)
+            print "\n    redemption script: {0}".format(redeem_script)
+            print "\n    destination address: {0}".format(dest_address)
+            print "\n    number of transactions: {0}".format(num_tx)
+            print "\n    change amount: {0}".format(change_amount)
+            print "\n    withdrawal amount: {0}".format(withdrawal_amount)
 
             print "\n\nplease confirm whether above data is correct"
             confirm = yes_no_interactive()
@@ -861,7 +881,7 @@ def withdraw_interactive():
                 print "{0} BTC going back to cold storage address {1}".format(value, address)
             else:
                 print "{0} BTC going to destination address {1}".format(value, address)
-        print "Fee amount: {0}".format(fee)
+        print "Fee amount: {0} btc ({1} mbtc)".format(fee,btc_to_mbtc(fee))
         print "\nSigning with private keys: "
         for key in keys:
             print "{}".format(key)
