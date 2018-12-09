@@ -935,21 +935,53 @@ def withdraw_interactive():
 ################################################################################################
 
 def install_software(deb_dir,btc_dir):
+    default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
+    default_tails_btc_dir = "/media/amnesia/apps/bitcoin-0.17.0"
     print "\ninstall function called w following directories:"
     print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n".format(deb_dir,btc_dir)
 
     # directory validation here - ensure directories & debs exist
     # user validation here: call yes/no verification function for user to review data
 
-    subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
-    subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}}/bin/*".format(btc_dir), shell=True)
 
-    if USING_TAILS is 1:
-        print "because using tails, manually opening port for bitcoind to locally listen on"
-        subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
-        # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
+    QR_SUBDIR = "qrcodes"
+    QR_SUFFIX = ".png"
+    script_root = os.path.dirname(os.path.abspath(__file__))
+    QR_DIRPATH = script_root + "/" + QR_SUBDIR
+    if not os.path.isdir(QR_DIRPATH):
+        os.mkdir(QR_DIRPATH)
+    QR_PATH = QR_DIRPATH + "/" + filename + QR_SUFFIX
+    if os.path.exists(QR_PATH):
+        #print "QR exists at: {0}".format(QR_PATH)
+        i = 2
+        while os.path.exists(QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX):
+            i += 1
+        QR_PATH = QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX
 
-        # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
+    # if anyone else finds default deb/btc dir paths useful can configure for multiple distros - right now only configured for tails
+    if deb_dir is None:
+        if os.path.isdir(default_tails_deb_dir):
+            print "\nno debian application packages directory supplied but found exiting default application directory at {0} (will use this)".format(default_tails_deb_dir)
+            deb_dir = default_tails_deb_dir
+        else:
+            print "\nno debian application package directory supplied with --appdir flag and no app directory found at default path (must either supply --appdir flag or have apps existing in default path to run setup)"
+            sys.exit()
+    else if btc_dir is None:
+        if os.path.isdir(default_tails_btc_dir):
+            print "\nno bitcoin application directory supplied but found exiting default bitcoin application directory at {0} (will use this)".format(default_tails_btc_dir)
+            btc_dir = default_tails_btc_dir
+        else:
+            print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path (one of these required for setup)"
+    else:
+        subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
+        subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}/bin/*".format(btc_dir), shell=True)
+
+        if USING_TAILS is 1:
+            print "because using tails, manually opening port for bitcoind to locally listen on"
+            subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
+            # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
+
+            # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
 
 ################################################################################################
 #
