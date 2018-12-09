@@ -711,8 +711,10 @@ def withdraw_interactive():
         print "\nYou will need to enter several pieces of information to create a withdrawal transaction."
         print "\n\n*** PLEASE BE SURE TO ENTER THE CORRECT DESTINATION ADDRESS ***\n"
 
+        source_address = raw_input("\nSource cold storage address: ")
+        # while can parse source_address from transaction hex, don't want to make assumptions about position in array indices
+
         if RE_SIGN_MODE is not 1:
-            source_address = raw_input("\nSource cold storage address: ")
             redeem_script = raw_input("\nRedemption script for source cold storage address: ")
             dest_address = raw_input("\nDestination address: ")
             num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
@@ -732,15 +734,27 @@ def withdraw_interactive():
             # the following assignments may not hold universally - need either interactive verification or manual input once verify re-sign works with current testing setup
             redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
             script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
-            source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+            #source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+            #  index for source address I think should be either 0 or 1
             dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
             num_tx = len(part_signed_tx["vin"])
             change_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
             withdrawal_amount = Decimal(part_signed_tx["vout"][1]["value"]).quantize(SATOSHI_PLACES)
             ####### end decode data/variables from partially signed tx #######
 
+            # find source address position in vin & vout
+            cold_storage_vout_index = -1
+            for i in len(part_signed_tx["vout"]):
+                if(part_signed_tx["vout"] == source_address):
+                    cold_storage_vout_index = part_signed_tx["vout"]["n"]
+                    break
+            if cold_storage_vout_index is -1:
+                print "could not find cold storage source address in partially signed transaction hex! exiting..."
+                sys.exit()
+            else print "\nfound cold storage address at vout index point {0}".format(cold_storage_vout_index)
+
             print"\nfollowing variables parsed from partially signed hex input:"
-            print "\nsource_address: {0}".format(source_address)
+            print "\ncold storage / source_address: {0}".format(source_address)
             print "\nredemption script: {0}".format(redeem_script)
             print "\ndestination address: {0}".format(dest_address)
             print "\nnumber of transactions: {0}".format(num_tx)
@@ -928,8 +942,11 @@ def install_software(deb_dir,bitcoin_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code'])
-
+                        'setup', 'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code'])
+    parser.add_argument("--appdir",
+                        help="for setup function: path to debian application packages to install")
+    parser.add_argument("--btcdir",
+                        help="for setup function: path to untarred bitcoin application directory (for local install of bitcoin binaries)")
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
     parser.add_argument("-d", "--dice", type=int,
@@ -971,6 +988,9 @@ if __name__ == "__main__":
     bitcoin_cli = "bitcoin-cli " + cli_args
 
     #print "\ninput toggles are: SHOW_BTC_CLI={0}, SUPPRESS_VERBOSE_SAFETY_CHECKLIST={1}\n".format(SHOW_BTC_CLI,SUPPRESS_VERBOSE_SAFETY_CHECKLIST)
+
+    if args.program == "setup":
+        install_software(args.appdir,args.btcdir)
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
