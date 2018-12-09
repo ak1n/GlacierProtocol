@@ -934,15 +934,15 @@ def withdraw_interactive():
 #
 ################################################################################################
 
-def install_software(deb_dir,bitcoin_dir):
+def install_software(deb_dir,btc_dir):
     print "\ninstall function called w following directories:"
-    print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n"
+    print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n".format(deb_dir,btc_dir)
 
     # directory validation here - ensure directories & debs exist
     # user validation here: call yes/no verification function for user to review data
 
     subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
-    subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}}/bin/*".format(deb_dir), shell=True)
+    subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}}/bin/*".format(btc_dir), shell=True)
 
     if USING_TAILS is 1:
         print "because using tails, manually opening port for bitcoind to locally listen on"
