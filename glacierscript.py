@@ -21,6 +21,24 @@
 # - qrencode (QR code writer: http://packages.ubuntu.com/xenial/qrencode)
 # - zbarimg (QR code reader: http://packages.ubuntu.com/xenial/zbar-tools)
 #
+# modifications by ak1n from main glacier:
+#   support for sequential transactions:
+#       withdraw interaction function heavily modified w globale re-sign toggle
+#       call with "sign-transaction" argument
+#       NOTE: have only tested single-input tx with 2 of 4 key multisig! this function needs auditing!
+#   Tails OS support: flag using tails with "-t" for setup function
+#   setup function: install debs, install bitcoin from untarred dir from bitcoin.lorg, configure tails for bitcoind
+#   multiple qr code generation without overwriting (increments)
+#   consolidation of most bitcoin-cli calls to dedicated function (helps w verbose mode too)
+#   verbose mode for displaying most bitcoin-cli calls for verification/testing/debugging
+#   generation of qr code from glacier script (pass text to encode w "qr-code -q <TEXT>")
+#   flag for suppressing verbose repeated user safety checking (annoying for testing/development)
+#   mBTC display when showing fees (vs. carefully counting zeroes)
+#
+# reorganization plan for commits:
+#   redo commits to fit into above categories
+#   rerun on tails to ensure no new errors introduced
+#
 ################################################################################################
 
 # standard Python libraries
@@ -731,9 +749,10 @@ def withdraw_interactive():
             part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
 
             ####### decode data/variables from partially signed tx #######
-            # the following assignments may not hold universally - need either interactive verification or manual input once verify re-sign works with current testing setup
+            # the following assignments may not hold universally - needs checking/auditing
             redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
             script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
+            # previously parsed out source/destination addresses - either I misordered them or array order does not hold true - therefore take storage address as input as per above then figure out destination from there
             #source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
             #  index for source address I think should be either 0 or 1
             #dest_address = part_signed_tx["vout"][1]["scriptPubKey"]["addresses"][0]
