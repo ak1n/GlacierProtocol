@@ -36,6 +36,7 @@
 #   mBTC display when showing fees (vs. carefully counting zeroes)
 #
 # reorganization plan for commits:
+#   first introduce further needed functionality
 #   redo commits to fit into above categories
 #   rerun on tails to ensure no new errors introduced
 #
