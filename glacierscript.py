@@ -966,7 +966,7 @@ def install_software(deb_dir,btc_dir):
         else:
             print "\nno debian application package directory supplied with --appdir flag and no app directory found at default path (must either supply --appdir flag or have apps existing in default path to run setup)"
             sys.exit()
-    else if btc_dir is None:
+    elif btc_dir is None:
         if os.path.isdir(default_tails_btc_dir):
             print "\nno bitcoin application directory supplied but found exiting default bitcoin application directory at {0} (will use this)".format(default_tails_btc_dir)
             btc_dir = default_tails_btc_dir
