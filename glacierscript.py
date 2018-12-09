@@ -865,7 +865,7 @@ def withdraw_interactive():
                 print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
         else:
             # else: re-sign mode where the above block is not needed bcz can get var data from hex & calculate the fee used in initial sign based on input, withdrawal, and change amounts
-            print "amount variable types are: input: {0}, withdrawal: {1}, change: {2}".format(type(input_amount),type(withdrawal_amount),type(change_amount))
+            #print "amount variable types are: input: {0}, withdrawal: {1}, change: {2}".format(type(input_amount),type(withdrawal_amount),type(change_amount))
             fee = input_amount - withdrawal_amount - change_amount
 
         addresses[dest_address] = str(withdrawal_amount)
@@ -958,6 +958,7 @@ def install_software(deb_dir,btc_dir):
     else:
         # should create file verification here (ensure debs & bitcoin actually exist)
         # should create user validation here: call yes/no verification function for user to review data
+        # could streamline this by concatenating/multilining cmds - to avoid multiple sudo passwd prompts in tails
         subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
         subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
 
