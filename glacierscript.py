@@ -941,23 +941,6 @@ def install_software(deb_dir,btc_dir):
     print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n".format(deb_dir,btc_dir)
 
     # directory validation here - ensure directories & debs exist
-    # user validation here: call yes/no verification function for user to review data
-
-
-    QR_SUBDIR = "qrcodes"
-    QR_SUFFIX = ".png"
-    script_root = os.path.dirname(os.path.abspath(__file__))
-    QR_DIRPATH = script_root + "/" + QR_SUBDIR
-    if not os.path.isdir(QR_DIRPATH):
-        os.mkdir(QR_DIRPATH)
-    QR_PATH = QR_DIRPATH + "/" + filename + QR_SUFFIX
-    if os.path.exists(QR_PATH):
-        #print "QR exists at: {0}".format(QR_PATH)
-        i = 2
-        while os.path.exists(QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX):
-            i += 1
-        QR_PATH = QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX
-
     # if anyone else finds default deb/btc dir paths useful can configure for multiple distros - right now only configured for tails
     if deb_dir is None:
         if os.path.isdir(default_tails_deb_dir):
@@ -973,6 +956,8 @@ def install_software(deb_dir,btc_dir):
         else:
             print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path (one of these required for setup)"
     else:
+        # should create file verification here (ensure debs & bitcoin actually exist)
+        # should create user validation here: call yes/no verification function for user to review data
         subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
         subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {1}/bin/*".format(btc_dir), shell=True)
 
