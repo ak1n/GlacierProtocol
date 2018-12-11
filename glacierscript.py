@@ -979,6 +979,8 @@ def install_software(deb_dir,btc_dir,veracrypt):
         if not os.path.isdir(deb_dir):
             print "\ndebian package directory path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(deb_dir)
             sys.exit()
+        else:
+            print "\nusing supplied debian package path at {0}".format(deb_dir)
 
     if btc_dir is None:
         if os.path.isdir(default_tails_btc_dir):
@@ -986,51 +988,52 @@ def install_software(deb_dir,btc_dir,veracrypt):
             btc_dir = default_tails_btc_dir
         else:
             print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path at {0} (one of these required for setup)".format(default_tails_btc_dir)
+            sys.exit()
     else:
         if not os.path.isdir(btc_dir):
-            print "\ndebian package directory path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(btc_dir)
+            print "\nbitcoin application path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(btc_dir)
             sys.exit()
 
-        if veracrypt is None:
-            print "\nveracrypt dir is None"
-            if os.path.isfile(default_tails_veracrypt_installer):
-                print "\nveracrypt installer exists at default location"
-            else:
-                print "\nveracrypt installer doesn't exist at default location"
+    if veracrypt is None:
+        print "\nveracrypt dir is None"
+        if os.path.isfile(default_tails_veracrypt_installer):
+            print "\nveracrypt installer exists at default location"
         else:
-            print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
-            if veracrypt == "":
-                print "\nveracrypt var is ''"
-            else:
-                print "\nveracrypt var is not ''"
-            if os.path.isfile(veracrypt):
-                print "\nveracrypt installer exists at supplied location"
-            else:
-                print "\nveracrypt installer doesn't exist at supplied location"
+            print "\nveracrypt installer doesn't exist at default location"
+    else:
+        print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
+        if veracrypt == "":
+            print "\nveracrypt var is ''"
+        else:
+            print "\nveracrypt var is not ''"
+        if os.path.isfile(veracrypt):
+            print "\nveracrypt installer exists at supplied location"
+        else:
+            print "\nveracrypt installer doesn't exist at supplied location"
 
-        # should create file verification here (ensure debs & bitcoin actually exist)
-        # should create user validation here: call yes/no verification function for user to review data
-        # could streamline this by concatenating/multilining cmds - to avoid multiple sudo passwd prompts in tails
-        cmds_string += "dpkg -i {0}/*.deb".format(deb_dir)
-        cmds_string += "; install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir)
-        #subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
-        #subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
+    # should create file verification here (ensure debs & bitcoin actually exist)
+    # should create user validation here: call yes/no verification function for user to review data
+    # could streamline this by concatenating/multilining cmds - to avoid multiple sudo passwd prompts in tails
+    cmds_string += "dpkg -i {0}/*.deb".format(deb_dir)
+    cmds_string += "; install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir)
+    #subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
+    #subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
 
-        if USING_TAILS is 1:
-            print "\nbecause using tails, manually opening port for bitcoind to locally listen on"
-            cmds_string += "; iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT"
-            #subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
-            # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
+    if USING_TAILS is 1:
+        print "\nbecause using tails, manually opening port for bitcoind to locally listen on"
+        cmds_string += "; iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT"
+        #subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
+        # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
 
-            # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
+        # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
 
-        if USING_VERACRYPT is 1:
-            print "\nusing veracrypt..."
-            print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt)
+    if USING_VERACRYPT is 1:
+        print "\nusing veracrypt..."
+        print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt)
 
-        # now execute commands together to avoid many prompts in tails
-        print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
-        subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
+    # now execute commands together to avoid many prompts in tails
+    print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
+    subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
 
 ################################################################################################
 #
