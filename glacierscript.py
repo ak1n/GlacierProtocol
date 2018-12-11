@@ -752,7 +752,8 @@ def withdraw_interactive():
             ####### decode data/variables from partially signed tx #######
             # the following assignments may not hold universally - needs checking/auditing
             redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
-            script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
+            #following script_pub_key not needed
+            #script_pub_key=part_signed_tx["vout"][0]["scriptPubKey"]["hex"]
             # previously parsed out source/destination addresses - either I misordered them or array order does not hold true - therefore take storage address as input as per above then figure out destination from there
             #source_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
             #  index for source address I think should be either 0 or 1
@@ -954,14 +955,17 @@ def withdraw_interactive():
 #
 ################################################################################################
 
-def install_software(deb_dir,btc_dir):
+def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
     default_tails_btc_dir = "/media/amnesia/apps/bitcoin-0.17.0"
-    print "\ninstall function called w following directories:"
-    print "\n  deb package dir: {0}\n  bitcoin directory: {1}\n".format(deb_dir,btc_dir)
+    default_tails_veracrypt_installer = "/media/amnesia/apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
+    # download from https://launchpad.net/veracrypt/trunk/1.23/+download/veracrypt-1.23-setup.tar.bz2
+    print "\ninstall function called w following directories/files:"
+    print "\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt_dir)
 
     # directory validation here - ensure directories & debs exist
     # if anyone else finds default deb/btc dir paths useful can configure for multiple distros - right now only configured for tails
+    cmds_string = ""
     if deb_dir is None:
         if os.path.isdir(default_tails_deb_dir):
             print "\nno debian application packages directory supplied but found exiting default application directory at {0} (will use this)".format(default_tails_deb_dir)
@@ -969,25 +973,62 @@ def install_software(deb_dir,btc_dir):
         else:
             print "\nno debian application package directory supplied with --appdir flag and no app directory found at default path (must either supply --appdir flag or have apps existing in default path to run setup)"
             sys.exit()
-    elif btc_dir is None:
+    else:
+        if not os.path.isdir(deb_dir):
+            print "\ndebian package directory path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(deb_dir)
+            sys.exit()
+
+    if btc_dir is None:
         if os.path.isdir(default_tails_btc_dir):
             print "\nno bitcoin application directory supplied but found exiting default bitcoin application directory at {0} (will use this)".format(default_tails_btc_dir)
             btc_dir = default_tails_btc_dir
         else:
             print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path (one of these required for setup)"
     else:
+        if not os.path.isdir(btc_dir):
+            print "\ndebian package directory path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(btc_dir)
+            sys.exit()
+
+        if veracrypt is None:
+            print "\nveracrypt dir is None"
+            if os.path.isfile(default_tails_veracrypt_installer):
+                print "\nveracrypt installer exists at default location"
+            else:
+                print "\nveracrypt installer doesn't exist at default location"
+        else:
+            print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
+            if veracrypt == "":
+                print "\nveracrypt var is ''"
+            else:
+                print "\nveracrypt var is not ''"
+            if os.path.isfile(veracrypt):
+                print "\nveracrypt installer exists at supplied location"
+            else:
+                print "\nveracrypt installer doesn't exist at supplied location"
+
         # should create file verification here (ensure debs & bitcoin actually exist)
         # should create user validation here: call yes/no verification function for user to review data
         # could streamline this by concatenating/multilining cmds - to avoid multiple sudo passwd prompts in tails
-        subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
-        subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
+        cmds_string += "dpkg -i {0}/*.deb".format(deb_dir)
+        cmds_string += "; install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir)
+        #subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
+        #subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
 
         if USING_TAILS is 1:
-            print "because using tails, manually opening port for bitcoind to locally listen on"
-            subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
+            print "\nbecause using tails, manually opening port for bitcoind to locally listen on"
+            cmds_string += "; iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT"
+            #subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
             # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
 
             # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
+
+        if USING_VERACRYPT is 1:
+            print "\nusing veracrypt..."
+            print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt_dir)
+
+        # now execute commands together to avoid many prompts in tails
+        print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
+        subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
 
 ################################################################################################
 #
@@ -1005,6 +1046,8 @@ if __name__ == "__main__":
                         help="for setup function: path to debian application packages to install")
     parser.add_argument("--btcdir",
                         help="for setup function: path to untarred bitcoin application directory (for local install of bitcoin binaries)")
+    parser.add_argument("--veracrypt",
+                        help="for setup function: path to untarred veracrypt setup file")
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
     parser.add_argument("-d", "--dice", type=int,
@@ -1048,7 +1091,7 @@ if __name__ == "__main__":
     #print "\ninput toggles are: SHOW_BTC_CLI={0}, SUPPRESS_VERBOSE_SAFETY_CHECKLIST={1}\n".format(SHOW_BTC_CLI,SUPPRESS_VERBOSE_SAFETY_CHECKLIST)
 
     if args.program == "setup":
-        install_software(args.appdir,args.btcdir)
+        install_software(args.appdir,args.btcdir,args.veracrypt)
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
