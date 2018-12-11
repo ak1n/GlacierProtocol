@@ -961,11 +961,13 @@ def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_veracrypt_installer = "/media/amnesia/apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
     # download from https://launchpad.net/veracrypt/trunk/1.23/+download/veracrypt-1.23-setup.tar.bz2
     print "\ninstall function called w following directories/files:"
-    print "\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt_dir)
+    print "\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt)
 
     # directory validation here - ensure directories & debs exist
     # if anyone else finds default deb/btc dir paths useful can configure for multiple distros - right now only configured for tails
     cmds_string = ""
+
+    # should consolidate following blocks into new function w multi calls
     if deb_dir is None:
         if os.path.isdir(default_tails_deb_dir):
             print "\nno debian application packages directory supplied but found exiting default application directory at {0} (will use this)".format(default_tails_deb_dir)
@@ -1024,7 +1026,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
 
         if USING_VERACRYPT is 1:
             print "\nusing veracrypt..."
-            print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt_dir)
+            print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt)
 
         # now execute commands together to avoid many prompts in tails
         print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
