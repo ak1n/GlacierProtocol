@@ -957,8 +957,8 @@ def withdraw_interactive():
 
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
-    default_tails_btc_dir = "/media/amnesia/apps/bitcoin-0.17.0"
-    default_tails_veracrypt_installer = "/media/amnesia/apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
+    default_tails_btc_dir = "/media/amnesia/apps/tails_apps/bitcoin-0.17.0"
+    default_tails_veracrypt_installer = "/media/amnesia/apps/tails_apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
     # download from https://launchpad.net/veracrypt/trunk/1.23/+download/veracrypt-1.23-setup.tar.bz2
     print "\ninstall function called w following directories/files:"
     print "\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt)
@@ -985,7 +985,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
             print "\nno bitcoin application directory supplied but found exiting default bitcoin application directory at {0} (will use this)".format(default_tails_btc_dir)
             btc_dir = default_tails_btc_dir
         else:
-            print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path (one of these required for setup)"
+            print "\nno bitcoin application directory path supplied with --btcdir flag, nor folder existing at default bitcoin application path at {0} (one of these required for setup)".format(default_tails_btc_dir)
     else:
         if not os.path.isdir(btc_dir):
             print "\ndebian package directory path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(btc_dir)
