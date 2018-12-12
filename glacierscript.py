@@ -1036,7 +1036,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
     # should create user validation here: call yes/no verification function for user to review data
     print "\nabout to perform the following operations:"
     print "\n  install debian packages from {0}".format(deb_dir)
-    print "\n  install bitcoin from {1}".format(btc_dir)
+    print "\n  install bitcoin from {0}".format(btc_dir)
 
     if USING_TAILS is 1:
         print "\n  manually opening Tails port for bitcoind to locally listen on"
