@@ -978,8 +978,8 @@ def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_btc_dir = "/media/amnesia/apps/tails_apps/bitcoin-0.17.0"
     default_tails_veracrypt_installer = "/media/amnesia/apps/tails_apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
     # download from https://launchpad.net/veracrypt/trunk/1.23/+download/veracrypt-1.23-setup.tar.bz2
-    print "\ninstall function called w following directories/files:"
-    print "\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt)
+    verbose("\ninstall function called w following directories/files:")
+    verbose("\n  deb package dir: {0}\n  bitcoin dir: {1}\n  veracrypt file: {2}".format(deb_dir,btc_dir,veracrypt))
 
     # directory validation here - ensure directories & debs exist
     # if anyone else finds default deb/btc dir paths useful can configure for multiple distros - right now only configured for tails
