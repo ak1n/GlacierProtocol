@@ -1060,6 +1060,7 @@ if __name__ == "__main__":
                         const=1,
                         help="for setup function: run veracrypt gui installer if set to 1")
     parser.add_argument("--veracrypt-dir",
+                        dest='veracrypt_dir',
                         help="for setup function: path to untarred veracrypt setup file if using veracrypt")
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
@@ -1105,7 +1106,7 @@ if __name__ == "__main__":
     #print "\ninput toggles are: SHOW_BTC_CLI={0}, SUPPRESS_VERBOSE_SAFETY_CHECKLIST={1}\n".format(SHOW_BTC_CLI,SUPPRESS_VERBOSE_SAFETY_CHECKLIST)
 
     if args.program == "setup":
-        install_software(args.appdir,args.btcdir,args.veracrypt-dir)
+        install_software(args.appdir,args.btcdir,args.veracrypt_dir)
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
