@@ -1054,7 +1054,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
         cmds_string += "; {0}".format(veracrypt)
 
     # now execute commands together to avoid many prompts in tails
-    if not yes_no_interactive:
+    if not yes_no_interactive():
         print "user not verifying setup parameters so aborting..."
         sys.exit()
     verbose("\nsetup is executing multiple sudo commands: {0}".format(cmds_string))
