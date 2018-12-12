@@ -1036,7 +1036,8 @@ def install_software(deb_dir,btc_dir,veracrypt):
 
     if USING_VERACRYPT is 1:
         print "\nusing veracrypt..."
-        print "\nproposed veracrypt command (just exec installer): ./{0}".format(veracrypt)
+        print "\nproposed veracrypt command (just exec installer): {0}".format(veracrypt)
+        cmds_string += "; {0}".format(veracrypt)
 
     # now execute commands together to avoid many prompts in tails
     print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
