@@ -122,7 +122,8 @@ def btc_to_mbtc(btc):
 
 def verbose(content):
     # if verbose mode enabled, print content
-
+    if VERBOSE_MODE:
+        print content
 
 ################################################################################################
 #
