@@ -1039,11 +1039,11 @@ def install_software(deb_dir,btc_dir,veracrypt):
 
     # should create user validation here: call yes/no verification function for user to review data
     print "\nabout to perform the following operations:"
-    print "\n  install debian packages from {0}".format(deb_dir)
-    print "\n  install bitcoin from {0}".format(btc_dir)
+    print "  install debian packages from {0}".format(deb_dir)
+    print "  install bitcoin from {0}".format(btc_dir)
 
     if USING_TAILS is 1:
-        print "\n  manually opening Tails port for bitcoind to locally listen on"
+        print "  manually opening Tails port for bitcoind to locally listen on"
         cmds_string += "; iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT"
         #subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
         # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
@@ -1051,10 +1051,11 @@ def install_software(deb_dir,btc_dir,veracrypt):
         # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
 
     if USING_VERACRYPT is 1:
-        print "\n  running veracrypt gui installer from: {0}".format(veracrypt)
+        print "  running veracrypt gui installer from: {0}".format(veracrypt)
         cmds_string += "; {0}".format(veracrypt)
 
     # now execute commands together to avoid many prompts in tails
+    print "\n"
     if not yes_no_interactive():
         print "user not verifying setup parameters so aborting..."
         sys.exit()
