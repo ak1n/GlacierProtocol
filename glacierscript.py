@@ -1000,19 +1000,23 @@ def install_software(deb_dir,btc_dir,veracrypt):
     if veracrypt is None:
         print "\nveracrypt dir is None"
         if os.path.isfile(default_tails_veracrypt_installer):
-            print "\nveracrypt installer exists at default location"
+            print "\nveracrypt installer exists at default location ({0})...will use this since no custom path provided".format(default_tails_veracrypt_installer)
+            veracrypt = default_tails_veracrypt_installer
         else:
-            print "\nveracrypt installer doesn't exist at default location"
+            print "\nveracrypt installer doesn't exist at default location and no custom path provided. please provide valid veracrypt path or place installer at default location ({0})".format(default_tails_veracrypt_installer)
+            sys.exit()
     else:
         print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
         if veracrypt == "":
-            print "\nveracrypt var is ''"
+            print "\nveracrypt var is ''. need either custom path to existing veracrypt installer or installer at default location"
+            sys.exit()
         else:
             print "\nveracrypt var is not ''"
         if os.path.isfile(veracrypt):
             print "\nveracrypt installer exists at supplied location"
         else:
-            print "\nveracrypt installer doesn't exist at supplied location"
+            print "\nveracrypt installer doesn't exist at supplied location...exiting"
+            sys.exit()
 
     # should create file verification here (ensure debs & bitcoin actually exist)
     # should create user validation here: call yes/no verification function for user to review data
