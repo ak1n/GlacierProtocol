@@ -71,6 +71,9 @@ RE_SIGN_MODE=0
 USING_TAILS=0
 #USING_TAILS is set to 1 if using the Tails operating system
 
+USING_VERACRYPT=1
+#USING_VERACRYPT is set to 1 if using the veracrypt installer in setup function
+
 ################################################################################################
 #
 # Minor helper functions
@@ -1051,8 +1054,13 @@ if __name__ == "__main__":
                         help="for setup function: path to debian application packages to install")
     parser.add_argument("--btcdir",
                         help="for setup function: path to untarred bitcoin application directory (for local install of bitcoin binaries)")
-    parser.add_argument("--veracrypt",
-                        help="for setup function: path to untarred veracrypt setup file")
+    parser.add_argument("--veracrypt", action='store_const',
+                        default=0,
+                        dest='USING_VERACRYPT',
+                        const=1,
+                        help="for setup function: run veracrypt gui installer if set to 1")
+    parser.add_argument("--veracrypt-dir",
+                        help="for setup function: path to untarred veracrypt setup file if using veracrypt")
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
     parser.add_argument("-d", "--dice", type=int,
@@ -1086,6 +1094,7 @@ if __name__ == "__main__":
     SHOW_BTC_CLI = args.SHOW_BTC_CLI
     SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
     USING_TAILS = args.USING_TAILS
+    USING_VERACRYPT = args.USING_VERACRYPT
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
@@ -1096,7 +1105,7 @@ if __name__ == "__main__":
     #print "\ninput toggles are: SHOW_BTC_CLI={0}, SUPPRESS_VERBOSE_SAFETY_CHECKLIST={1}\n".format(SHOW_BTC_CLI,SUPPRESS_VERBOSE_SAFETY_CHECKLIST)
 
     if args.program == "setup":
-        install_software(args.appdir,args.btcdir,args.veracrypt)
+        install_software(args.appdir,args.btcdir,args.veracrypt-dir)
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
