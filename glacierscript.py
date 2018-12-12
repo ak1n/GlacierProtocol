@@ -59,19 +59,20 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
-SHOW_BTC_CLI=0
-#if SHOW_BTC_CLI set to 1 will display commands for bitcoin-cli as they are called
+VERBOSE_MODE = 0
+#SHOW_BTC_CLI=0
+# if VERBOSE_MODE is 1 will display more verbose output including most bitcoin-cli calls
 
-SUPPRESS_VERBOSE_SAFETY_CHECKLIST=0
+SUPPRESS_VERBOSE_SAFETY_CHECKLIST = 0
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
 
-RE_SIGN_MODE=0
+RE_SIGN_MODE = 0
 #RE_SIGN_MODE is a global toggle for the withdraw interactive function to (when =1) sign a partially signed (rather than newly created) transaction
 
-USING_TAILS=0
+USING_TAILS = 0
 #USING_TAILS is set to 1 if using the Tails operating system
 
-USING_VERACRYPT=1
+USING_VERACRYPT = 1
 #USING_VERACRYPT is set to 1 if using the veracrypt installer in setup function
 
 ################################################################################################
@@ -118,6 +119,10 @@ def btc_to_satoshi(btc):
 def btc_to_mbtc(btc):
     mbtc = Decimal(btc)*1000
     return mbtc.quantize(SATOSHI_PLACES)
+
+def verbose(content):
+    # if verbose mode enabled, print content
+
 
 ################################################################################################
 #
@@ -380,11 +385,13 @@ def bitcoin_cli_call(cmd,args):
     # note glacier has a space after bitcoind call in "bitcoin_cli" variable
     # need to double check 1 to 2 spacing
     full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
-    if SHOW_BTC_CLI is 1:
-        print "\nbitcoin cli call:\n {0} \n".format(full_cmd)
+    verbose("\nbitcoin cli call:\n {0} \n".format(full_cmd))
+    #if SHOW_BTC_CLI is 1:
+    #    print "\nbitcoin cli call:\n {0} \n".format(full_cmd)
     cmd_output = subprocess.check_output(full_cmd, shell=True).strip()
-    if SHOW_BTC_CLI is 1:
-        print "\ncli output:\n {0} \n\n".format(cmd_output)
+    verbose("\ncli output:\n {0} \n\n".format(cmd_output))
+    #if SHOW_BTC_CLI is 1:
+    #    print "\ncli output:\n {0} \n\n".format(cmd_output)
     return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
@@ -1007,19 +1014,15 @@ def install_software(deb_dir,btc_dir,veracrypt):
     if USING_VERACRYPT is 1:
         valid_veracrypt = 0
         if veracrypt is not None:
-            print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
-            if veracrypt == "":
-                print "\nveracrypt var is ''. need either custom path to existing veracrypt installer or installer at default location"
-            else:
-                print "\nveracrypt var is not ''"
+            #print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
             if os.path.isfile(veracrypt):
-                print "\nveracrypt installer exists at supplied location"
+                #print "\nveracrypt installer exists at supplied location"
                 valid_veracrypt = 1
-            else:
-                print "\nveracrypt installer doesn't exist at supplied location...will try default location"
+            #else:
+            #    print "\nveracrypt installer doesn't exist at supplied location...will try default location"
         if valid_veracrypt is 0:
             if os.path.isfile(default_tails_veracrypt_installer):
-                print "\nveracrypt installer exists at default location ({0})...will use this since no or invalid custom path provided".format(default_tails_veracrypt_installer)
+                #print "\nveracrypt installer exists at default location ({0})...will use this since no or invalid custom path provided".format(default_tails_veracrypt_installer)
                 veracrypt = default_tails_veracrypt_installer
             else:
                 print "\nveracrypt installer doesn't exist at default location or custom path. please provide valid veracrypt path or place installer at default location ({0})".format(default_tails_veracrypt_installer)
@@ -1054,7 +1057,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
     if not yes_no_interactive:
         print "user not verifying setup parameters so aborting..."
         sys.exit()
-    print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
+    verbose("\nsetup is executing multiple sudo commands: {0}".format(cmds_string))
     subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
 
 ################################################################################################
@@ -1095,7 +1098,7 @@ if __name__ == "__main__":
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
     parser.add_argument('-v', action='store_const',
                         default=0,
-                        dest='SHOW_BTC_CLI',
+                        dest='VERBOSE_MODE',
                         const=1,
                         help='increase output verbosity including showing bitcoin-cli calls/outputs')
     parser.add_argument('-s', action='store_const',
@@ -1111,7 +1114,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set global toggles from command line flags
-    SHOW_BTC_CLI = args.SHOW_BTC_CLI
+    VERBOSE_MODE = args.VERBOSE_MODE
     SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
     USING_TAILS = args.USING_TAILS
     USING_VERACRYPT = args.USING_VERACRYPT
