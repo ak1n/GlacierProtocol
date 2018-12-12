@@ -958,6 +958,13 @@ def withdraw_interactive():
 #
 ################################################################################################
 
+def sw_install_error(sw,given_dir,default_dir):
+    print "\ncould not find {0} at either provided path ({1}) or default path ({2}). please ensure {0} is present at either provided or default paths to use. exiting".format(sw,given_dir,default_dir)
+    sys.exit()
+
+def sw_install_check(sw,given_dir,default_dir):
+    print "sw install check"
+
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
     default_tails_btc_dir = "/media/amnesia/apps/tails_apps/bitcoin-0.17.0"
@@ -997,37 +1004,42 @@ def install_software(deb_dir,btc_dir,veracrypt):
             print "\nbitcoin application path supplied via command line not found (at {0})- please ensure this exists and retry...exiting".format(btc_dir)
             sys.exit()
 
-    if veracrypt is None:
-        print "\nveracrypt dir is None"
-        if os.path.isfile(default_tails_veracrypt_installer):
-            print "\nveracrypt installer exists at default location ({0})...will use this since no custom path provided".format(default_tails_veracrypt_installer)
-            veracrypt = default_tails_veracrypt_installer
-        else:
-            print "\nveracrypt installer doesn't exist at default location and no custom path provided. please provide valid veracrypt path or place installer at default location ({0})".format(default_tails_veracrypt_installer)
-            sys.exit()
-    else:
-        print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
-        if veracrypt == "":
-            print "\nveracrypt var is ''. need either custom path to existing veracrypt installer or installer at default location"
-            sys.exit()
-        else:
-            print "\nveracrypt var is not ''"
-        if os.path.isfile(veracrypt):
-            print "\nveracrypt installer exists at supplied location"
-        else:
-            print "\nveracrypt installer doesn't exist at supplied location...exiting"
-            sys.exit()
+    if USING_VERACRYPT is 1:
+        valid_veracrypt = 0
+        if veracrypt is not None:
+            print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
+            if veracrypt == "":
+                print "\nveracrypt var is ''. need either custom path to existing veracrypt installer or installer at default location"
+            else:
+                print "\nveracrypt var is not ''"
+            if os.path.isfile(veracrypt):
+                print "\nveracrypt installer exists at supplied location"
+                valid_veracrypt = 1
+            else:
+                print "\nveracrypt installer doesn't exist at supplied location...will try default location"
+        if valid_veracrypt is 0:
+            if os.path.isfile(default_tails_veracrypt_installer):
+                print "\nveracrypt installer exists at default location ({0})...will use this since no or invalid custom path provided".format(default_tails_veracrypt_installer)
+                veracrypt = default_tails_veracrypt_installer
+            else:
+                print "\nveracrypt installer doesn't exist at default location or custom path. please provide valid veracrypt path or place installer at default location ({0})".format(default_tails_veracrypt_installer)
+                # by exiting force the user here to either remedy the path or not use veracrypt with script re-run
+                sys.exit()
 
-    # should create file verification here (ensure debs & bitcoin actually exist)
-    # should create user validation here: call yes/no verification function for user to review data
+
     # could streamline this by concatenating/multilining cmds - to avoid multiple sudo passwd prompts in tails
     cmds_string += "dpkg -i {0}/*.deb".format(deb_dir)
     cmds_string += "; install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir)
     #subprocess.call("sudo dpkg -i {0}/*.deb".format(deb_dir), shell=True)
     #subprocess.call("sudo install -m 0755 -o root -g root -t /usr/local/bin {0}/bin/*".format(btc_dir), shell=True)
 
+    # should create user validation here: call yes/no verification function for user to review data
+    print "\nabout to perform the following operations:"
+    print "\n  install debian packages from {0}".format(deb_dir)
+    print "\n  install bitcoin from {1}".format(btc_dir)
+
     if USING_TAILS is 1:
-        print "\nbecause using tails, manually opening port for bitcoind to locally listen on"
+        print "\n  manually opening Tails port for bitcoind to locally listen on"
         cmds_string += "; iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT"
         #subprocess.call("sudo iptables -I OUTPUT -p tcp -d 127.0.0.1 --dport 8332 -m owner --uid-owner amnesia -j ACCEPT", shell=True)
         # without above command bitcoin-cli calls will not reach bitcoind - see https://www.reddit.com/r/tails/comments/3fd6uk/how_to_make_rpc_calls_to_bitcoind_in_tails/
@@ -1035,11 +1047,13 @@ def install_software(deb_dir,btc_dir,veracrypt):
         # e.g. to call this function for tails testing: install_software("/media/amnesia/apps_testing/tails_apps","/media/amnesia/tails_apps/bitcoin-0.17.0")
 
     if USING_VERACRYPT is 1:
-        print "\nusing veracrypt..."
-        print "\nproposed veracrypt command (just exec installer): {0}".format(veracrypt)
+        print "\n  running veracrypt gui installer from: {0}".format(veracrypt)
         cmds_string += "; {0}".format(veracrypt)
 
     # now execute commands together to avoid many prompts in tails
+    if not yes_no_interactive:
+        print "user not verifying setup parameters so aborting..."
+        sys.exit()
     print "\nexecuting multiple sudo commands: {0}".format(cmds_string)
     subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
 
