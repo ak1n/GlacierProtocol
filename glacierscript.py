@@ -40,6 +40,11 @@
 #   redo commits to fit into above categories
 #   rerun on tails to ensure no new errors introduced
 #
+# potential future mods include:
+#   follow through w proposed changes for use w bitcoin 0.17 as commented in code
+#     will require multiple updates include: require_minimum_bitcoind_version probably to 0.17
+#   alteration of ensure_bitcoin_running command to increase wait time and provide user feedback periodically w function iterations
+#
 ################################################################################################
 
 # standard Python libraries
@@ -63,14 +68,15 @@ VERBOSE_MODE = 0
 #SHOW_BTC_CLI=0
 # if VERBOSE_MODE is 1 will display more verbose output including most bitcoin-cli calls
 
-SUPPRESS_VERBOSE_SAFETY_CHECKLIST = 0
+SUPPRESS_VERBOSE_SAFETY_CHECKLIST = 1
 #if SUPPRESS_VERBOSE_SAFETY_CHECKLIST set to 1 will suppress manually entering in "y" repeatedly for safety checklist
+#repeated prompts like this aren't going to save anyone from catastrophe - if they need this for the safety items they have bigger problems on their hands
 
 RE_SIGN_MODE = 0
 #RE_SIGN_MODE is a global toggle for the withdraw interactive function to (when =1) sign a partially signed (rather than newly created) transaction
 
 USING_TAILS = 0
-#USING_TAILS is set to 1 if using the Tails operating system
+#USING_TAILS is set to 1 if using the Tails operating system. for now used in setup function when -t flag supplied
 
 USING_VERACRYPT = 1
 #USING_VERACRYPT is set to 1 if using the veracrypt installer in setup function
@@ -1103,11 +1109,11 @@ if __name__ == "__main__":
                         dest='VERBOSE_MODE',
                         const=1,
                         help='increase output verbosity including showing bitcoin-cli calls/outputs')
-    parser.add_argument('-s', action='store_const',
-                        default=0,
-                        dest='SUPPRESS_VERBOSE_SAFETY_CHECKLIST',
-                        const=1,
-                        help='suppress verbose safety checklist - give only single combined y/n for checklist rather than prompting for each safety check item (useful if running script for development/testing)')
+    #parser.add_argument('-s', action='store_const',
+    #                    default=0,
+    #                    dest='SUPPRESS_VERBOSE_SAFETY_CHECKLIST',
+    #                    const=1,
+    #                    help='suppress verbose safety checklist - give only single combined y/n for checklist rather than prompting for each safety check item (useful if running script for development/testing)')
     parser.add_argument('-t', action='store_const',
                         default=0,
                         dest='USING_TAILS',
@@ -1117,7 +1123,7 @@ if __name__ == "__main__":
 
     # set global toggles from command line flags
     VERBOSE_MODE = args.VERBOSE_MODE
-    SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
+    #SUPPRESS_VERBOSE_SAFETY_CHECKLIST = args.SUPPRESS_VERBOSE_SAFETY_CHECKLIST
     USING_TAILS = args.USING_TAILS
     USING_VERACRYPT = args.USING_VERACRYPT
 
