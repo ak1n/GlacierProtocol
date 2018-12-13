@@ -1157,3 +1157,5 @@ if __name__ == "__main__":
 
     if args.program == "qr-code":
         write_and_verify_qr_code("qrcode", "qrcode", args.qrdata)
+
+print "\nglacier script complete"
