@@ -21,19 +21,22 @@
 # - qrencode (QR code writer: http://packages.ubuntu.com/xenial/qrencode)
 # - zbarimg (QR code reader: http://packages.ubuntu.com/xenial/zbar-tools)
 #
-# modifications by ak1n from main glacier:
-#   support for sequential transactions:
-#       withdraw interaction function heavily modified w globale re-sign toggle
-#       call with "sign-transaction" argument
-#       NOTE: have only tested single-input tx with 2 of 4 key multisig! this function needs auditing!
-#   Tails OS support: flag using tails with "-t" for setup function
-#   setup function: install debs, install bitcoin from untarred dir from bitcoin.lorg, configure tails for bitcoind
-#   multiple qr code generation without overwriting (increments)
-#   consolidation of most bitcoin-cli calls to dedicated function (helps w verbose mode too)
-#   verbose mode for displaying most bitcoin-cli calls for verification/testing/debugging
-#   generation of qr code from glacier script (pass text to encode w "qr-code -q <TEXT>")
-#   flag for suppressing verbose repeated user safety checking (annoying for testing/development)
-#   mBTC display when showing fees (vs. carefully counting zeroes)
+# modifications by ak1n from main glacier by category:
+#   - sequential transactions support:
+#       -- withdraw interaction function heavily modified w globale re-sign toggle
+#       -- call with "sign-transaction" argument
+#       -- NOTE: have only tested *single-input* tx with 2 of 4 key multisig! this function needs auditing/additional-testing!
+#   - tails focused:
+#       -- Tails OS support: flag using tails with "-t" for setup function
+#       -- setup function: mainly tails-oriented. install debs, install bitcoin from untarred dir from bitcoin.lorg, configure tails for bitcoind
+#   - qr function upgrades:
+#       -- multiple qr code generation without overwriting (increments)
+#       -- generation of qr code from glacier script (pass text to encode w "qr-code -q <TEXT>")
+#   - consolidation of most bitcoin-cli calls to dedicated function (helps w verbose mode too)
+#   - verbose mode for displaying most bitcoin-cli calls for verification/testing/debugging
+#   - mild user interface upgrades:
+#       -- flag for suppressing verbose repeated user safety checking (annoying for testing/development)
+#       -- mBTC display when showing fees (vs. carefully counting zeroes)
 #
 # reorganization plan for commits:
 #   first introduce further needed functionality
