@@ -989,7 +989,7 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
         vc_vol_path = "/media/amnesia/apps/user_data/glacierVol.vc"
     if vc_vol_name is None:
         vc_vol_name = DEFAULT_VERACRYPT_TAILS_VOL_NAME
-    print "\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
+    verbose("\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name))
     if not os.path.exists(vc_vol_path):
         print "\nno file exists at {0}".format(vc_vol_path)
         sys.exit()
@@ -1010,7 +1010,9 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     print "\nveracrypt open function complete"
 
 def veracrypt_close_vol(vc_vol_name):
-    subprocess.call("sudo umount {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
+    cmd = "sudo umount {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
+    verbose("\nabout to execute following cmd: \n{0}\n".format(cmd))
+    subprocess.call(cmd, shell=True)
 
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
