@@ -982,6 +982,31 @@ def sw_install_error(sw,given_dir,default_dir):
 def sw_install_check(sw,given_dir,default_dir):
     print "sw install check"
 
+def veracrypt_open_vol(vc_vol_path,vc_vol_name):
+    veracrypt_mountdir = "/media/amnesia/veracrypt-volumes"
+    if vc_vol_path is None:
+        vc_vol_path = "/media/apps/user_data/glacierVol.vc"
+    if vc_vol_name is None:
+        vc_vol_name = "glaciervc"
+    print "\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,veracrypt_mountdir,vc_vol_name)
+    if not os.path.exists(vc_vol_path):
+        print "\nno file exists at {0}".format(vc_vol_path)
+        sys.exit()
+    try:
+        subprocess.call("sudo cryptsetup --veracrypt open --type tcrypt {0} {1}".format(vc_vol_path,vc_vol_name), shell=True)
+        #  from man page: open <device> <name> --type <device_type>
+        #  this will appear then as /dev/mapper/vc_vol_name
+    except:
+        print "\nerror attempting to OPEN veracrypt volume"
+        break;
+    subprocess.call("sudo mkdir -p {0}/{1}".format(veracrypt_mountdir,vc_vol_name)), shell=True)
+    try:
+        subprocess.call("sudo mount /dev/mapper/{0}".format(vc_vol_name), shell=True)
+    except:
+        print "\nerror attempting to MOUNT veracrypt volume"
+        break;
+    function "veracrypt open function complete"
+
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
     default_tails_btc_dir = "/media/amnesia/apps/tails_apps/bitcoin-0.17.0"
