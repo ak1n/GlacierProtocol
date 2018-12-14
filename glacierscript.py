@@ -990,6 +990,9 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     if vc_vol_name is None:
         vc_vol_name = DEFAULT_VERACRYPT_TAILS_VOL_NAME
     verbose("\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name))
+    if not yes_no_interactive():
+        print "\ndid not confirm veracrypt file/mount paths so exiting"
+        sys.exit()
     if not os.path.exists(vc_vol_path):
         print "\nno file exists at {0}".format(vc_vol_path)
         sys.exit()
