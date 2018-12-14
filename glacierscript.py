@@ -999,7 +999,7 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     except:
         print "\nerror attempting to OPEN veracrypt volume"
         break;
-    subprocess.call("sudo mkdir -p {0}/{1}".format(veracrypt_mountdir,vc_vol_name)), shell=True)
+    subprocess.call("sudo mkdir -p {0}/{1}".format(veracrypt_mountdir,vc_vol_name), shell=True)
     try:
         subprocess.call("sudo mount /dev/mapper/{0}".format(vc_vol_name), shell=True)
     except:
