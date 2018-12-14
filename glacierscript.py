@@ -998,8 +998,9 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
         sys.exit()
     cmds_string = "cryptsetup --veracrypt open --type tcrypt {0} {1}".format(vc_vol_path,vc_vol_name)
     cmds_string +="; mkdir -p {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
-    cmds_string +="; mount /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
+    cmds_string +="; mount -o uid=1000,gid=1000 /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
 
+    #ount -t vfat -o umask=0022,gid=33,uid=33 dev /var/www
     try:
         subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
     except:
