@@ -1112,7 +1112,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'setup', 'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code', 'veracrypt-open'])
+                        'setup', 'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code', 'veracrypt-open', 'veracrypt-close'])
     parser.add_argument("--appdir",
                         help="for setup function: path to debian application packages to install")
     parser.add_argument("--btcdir",
