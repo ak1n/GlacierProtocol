@@ -996,20 +996,29 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     if not os.path.exists(vc_vol_path):
         print "\nno file exists at {0}".format(vc_vol_path)
         sys.exit()
+    cmds_string = "cryptsetup --veracrypt open --type tcrypt {0} {1}".format(vc_vol_path,vc_vol_name)
+    cmds_string +="; mkdir -p {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
+    cmds_string +="; mount /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
+
     try:
-        subprocess.call("sudo cryptsetup --veracrypt open --type tcrypt {0} {1}".format(vc_vol_path,vc_vol_name), shell=True)
+        subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
+    except:
+        print "\nerror while attempting to open/mount veracrypt volume"
+
+    #try:
+    #    subprocess.call("sudo cryptsetup --veracrypt open --type tcrypt {0} {1}".format(vc_vol_path,vc_vol_name), shell=True)
         #  from man page: open <device> <name> --type <device_type>
         #  this will appear then as /dev/mapper/vc_vol_name
-    except:
-        print "\nerror attempting to OPEN veracrypt volume"
-        sys.exit()
-    subprocess.call("sudo mkdir -p {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
-    try:
-        subprocess.call("sudo mount /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
-    except:
-        print "\nerror attempting to MOUNT veracrypt volume"
-        sys.exit()
-    subprocess.call("sudo chown -R amnesia:amnesia {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
+    #except:
+    #    print "\nerror attempting to OPEN veracrypt volume"
+    #    sys.exit()
+    #subprocess.call("sudo mkdir -p {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
+    #try:
+    #    subprocess.call("sudo mount /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
+    #except:
+    #    print "\nerror attempting to MOUNT veracrypt volume"
+    #    sys.exit()
+    #subprocess.call("sudo chown -R amnesia:amnesia {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
     print "\nveracrypt open function complete"
 
 def veracrypt_close_vol(vc_vol_name):
