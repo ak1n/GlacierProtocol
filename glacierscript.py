@@ -985,7 +985,7 @@ def sw_install_check(sw,given_dir,default_dir):
 def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     veracrypt_mountdir = "/media/amnesia/veracrypt-volumes"
     if vc_vol_path is None:
-        vc_vol_path = "/media/apps/user_data/glacierVol.vc"
+        vc_vol_path = "/media/amnesia/apps/user_data/glacierVol.vc"
     if vc_vol_name is None:
         vc_vol_name = "glaciervc"
     print "\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,veracrypt_mountdir,vc_vol_name)
