@@ -83,6 +83,8 @@ USING_TAILS = 0
 
 USING_VERACRYPT = 1
 #USING_VERACRYPT is set to 1 if using the veracrypt installer in setup function
+VERACRYPT_TAILS_MOUNT_DIR = "/media/amnesia/veracrypt-volumes"
+DEFAULT_VERACRYPT_TAILS_VOL_NAME = "glaciervc"
 
 ################################################################################################
 #
@@ -983,12 +985,11 @@ def sw_install_check(sw,given_dir,default_dir):
     print "sw install check"
 
 def veracrypt_open_vol(vc_vol_path,vc_vol_name):
-    veracrypt_mountdir = "/media/amnesia/veracrypt-volumes"
     if vc_vol_path is None:
         vc_vol_path = "/media/amnesia/apps/user_data/glacierVol.vc"
     if vc_vol_name is None:
-        vc_vol_name = "glaciervc"
-    print "\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,veracrypt_mountdir,vc_vol_name)
+        vc_vol_name = DEFAULT_VERACRYPT_TAILS_VOL_NAME
+    print "\nwill attempt to mount veracrypt volume at {0} to {1}/{2}".format(vc_vol_path,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name)
     if not os.path.exists(vc_vol_path):
         print "\nno file exists at {0}".format(vc_vol_path)
         sys.exit()
@@ -999,13 +1000,17 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     except:
         print "\nerror attempting to OPEN veracrypt volume"
         sys.exit()
-    subprocess.call("sudo mkdir -p {0}/{1}".format(veracrypt_mountdir,vc_vol_name), shell=True)
+    subprocess.call("sudo mkdir -p {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
     try:
-        subprocess.call("sudo mount /dev/mapper/{0}".format(vc_vol_name), shell=True)
+        subprocess.call("sudo mount /dev/mapper/{0} {1}/{2}".format(vc_vol_name,VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
     except:
         print "\nerror attempting to MOUNT veracrypt volume"
         sys.exit()
+    subprocess.call("sudo chown -R amnesia:amnesia {0}/{1}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
     print "\nveracrypt open function complete"
+
+def veracrypt_close_vol(vc_vol_name):
+    subprocess.call("sudo umount {1}/{2}".format(VERACRYPT_TAILS_MOUNT_DIR,vc_vol_name), shell=True)
 
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
@@ -1191,5 +1196,8 @@ if __name__ == "__main__":
 
     if args.program == "veracrypt-open":
         veracrypt_open_vol(args.vc_vol_path,args.vc_vol_name)
+
+    if args.program == "veracrypt-close":
+        veracrypt_close_vol(DEFAULT_VERACRYPT_TAILS_VOL_NAME)
 
 print "\nglacier script complete"
