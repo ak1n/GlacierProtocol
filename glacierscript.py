@@ -1005,7 +1005,7 @@ def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     except:
         print "\nerror attempting to MOUNT veracrypt volume"
         break;
-    function "veracrypt open function complete"
+    print "\nveracrypt open function complete"
 
 def install_software(deb_dir,btc_dir,veracrypt):
     default_tails_deb_dir = "/media/amnesia/apps/tails_apps"
