@@ -1107,7 +1107,7 @@ def install_software(deb_dir,btc_dir,veracrypt):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'setup', 'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code'])
+                        'setup', 'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction', 'qr-code', 'veracrypt-open'])
     parser.add_argument("--appdir",
                         help="for setup function: path to debian application packages to install")
     parser.add_argument("--btcdir",
@@ -1120,6 +1120,9 @@ if __name__ == "__main__":
     parser.add_argument("--veracrypt-dir",
                         dest='veracrypt_dir',
                         help="for setup function: path to untarred veracrypt setup file if using veracrypt")
+    parser.add_argument("--vc-vol",
+                        dest='vc_vol_path',
+                        help="for use with veracrypt-open - path to existing veracrypt volume (to be opened) in non-default location")
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
     parser.add_argument("-d", "--dice", type=int,
@@ -1182,5 +1185,8 @@ if __name__ == "__main__":
 
     if args.program == "qr-code":
         write_and_verify_qr_code("qrcode", "qrcode", args.qrdata)
+
+    if args.program == "veracrypt-open":
+        veracrypt_open_vol(args.vc_vol_path)
 
 print "\nglacier script complete"
