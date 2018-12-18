@@ -984,6 +984,39 @@ def sw_install_error(sw,given_dir,default_dir):
 def sw_install_check(sw,given_dir,default_dir):
     print "sw install check"
 
+def veracrypt_installer(veracrypt):
+    print "veracrypt installer function"
+    default_tails_veracrypt_installer = "/media/amnesia/apps/tails_apps/veracrypt-1.23-setup/veracrypt-1.23-setup-gui-x64"
+    valid_veracrypt = 0
+    cmds_string = ""
+    if veracrypt is not None:
+        #print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
+        if os.path.isfile(veracrypt):
+            #print "\nveracrypt installer exists at supplied location"
+            valid_veracrypt = 1
+        #else:
+        #    print "\nveracrypt installer doesn't exist at supplied location...will try default location"
+    if valid_veracrypt is 0:
+        if os.path.isfile(default_tails_veracrypt_installer):
+            #print "\nveracrypt installer exists at default location ({0})...will use this since no or invalid custom path provided".format(default_tails_veracrypt_installer)
+            veracrypt = default_tails_veracrypt_installer
+        else:
+            print "\nveracrypt installer doesn't exist at default location or custom path. please provide valid veracrypt path or place installer at default location ({0})".format(default_tails_veracrypt_installer)
+            # by exiting force the user here to either remedy the path or not use veracrypt with script re-run
+            sys.exit()
+
+    print "  running veracrypt gui installer from: {0}".format(veracrypt)
+    cmds_string += "{0}".format(veracrypt)
+
+    # now execute commands together to avoid many prompts in tails
+    print "\n"
+    if not yes_no_interactive():
+        print "user not verifying setup parameters so aborting..."
+        sys.exit()
+    verbose("\ninstalling veracrypt gui for volume creation: {0}".format(cmds_string))
+    subprocess.call("sudo -- sh -c '{0}'".format(cmds_string), shell=True)
+
+
 def veracrypt_open_vol(vc_vol_path,vc_vol_name):
     if vc_vol_path is None:
         vc_vol_path = "/media/amnesia/apps/user_data/glacierVol.vc"
@@ -1067,6 +1100,8 @@ def install_software(deb_dir,btc_dir,veracrypt):
             sys.exit()
 
     if USING_VERACRYPT is 1:
+        # note: sometimes get a stranger error w "xmessage" popup when veracrypt gui installer launches
+        # consider using non-gui installer if available?
         valid_veracrypt = 0
         if veracrypt is not None:
             #print "\nveracrypt var is not none (value: '{0}')...checking if supplied path/file exists...".format(veracrypt)
