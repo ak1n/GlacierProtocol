@@ -40,8 +40,8 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
-VERBOSE_MODE = 0
-# if VERBOSE_MODE is 1 will display more verbose output including most bitcoin-cli calls (see help/main-arguments re toggling)
+verbose_mode = 0
+# if verbose_mode is 1 will display more verbose output including most bitcoin-cli calls (see help/main-arguments re toggling)
 
 SINGLE_SAFETY_CONFIRM = 1
 #if SINGLE_SAFETY_CONFIRM set to 1 will suppress manually entering in "y" repeatedly for safety checklist (replaces with single confirmation)
@@ -351,7 +351,7 @@ def get_utxos(tx, address):
 
 def verbose(content):
     # if verbose mode enabled, print content
-    if VERBOSE_MODE:
+    if verbose_mode:
         print content
 
 def bitcoin_cli_call(cmd,args):
@@ -504,27 +504,27 @@ def write_and_verify_qr_code(name, filename, data):
     QR_SUBDIR = "qrcodes"
     QR_SUFFIX = ".png"
     script_root = os.path.dirname(os.path.abspath(__file__))
-    QR_DIRPATH = script_root + "/" + QR_SUBDIR
-    if not os.path.isdir(QR_DIRPATH):
-        os.mkdir(QR_DIRPATH)
-    QR_PATH = QR_DIRPATH + "/" + filename + QR_SUFFIX
-    if os.path.exists(QR_PATH):
-        #print "QR exists at: {0}".format(QR_PATH)
+    qr_dirpath = script_root + "/" + QR_SUBDIR
+    if not os.path.isdir(qr_dirpath):
+        os.mkdir(qr_dirpath)
+    qr_path = qr_dirpath + "/" + filename + QR_SUFFIX
+    if os.path.exists(qr_path):
+        #print "QR exists at: {0}".format(qr_path)
         i = 2
-        while os.path.exists(QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX):
+        while os.path.exists(qr_dirpath + "/" + filename + str(i) + QR_SUFFIX):
             i += 1
-        QR_PATH = QR_DIRPATH + "/" + filename + str(i) + QR_SUFFIX
+        qr_path = qr_dirpath + "/" + filename + str(i) + QR_SUFFIX
 
-    subprocess.call("qrencode -o {0} {1}".format(QR_PATH, data), shell=True)
+    subprocess.call("qrencode -o {0} {1}".format(qr_path, data), shell=True)
     check = subprocess.check_output(
-        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(QR_PATH), shell=True)
+        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(qr_path), shell=True)
 
     if check.strip() != data:
         print "********************************************************************"
         print "WARNING: {} QR code could not be verified properly. This could be a sign of a security breach.".format(name)
         print "********************************************************************"
 
-    print "QR code for {0} written to {1}".format(name, QR_PATH)
+    print "QR code for {0} written to {1}".format(name, qr_path)
 
 
 ################################################################################################
@@ -861,13 +861,13 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--qrdata", help="Data to be encoded into qr-code")
     parser.add_argument('-v', action='store_const',
                         default=0,
-                        dest='VERBOSE_MODE',
+                        dest='verbose_mode',
                         const=1,
                         help='increase output verbosity including showing bitcoin-cli calls/outputs')
 
     args = parser.parse_args()
 
-    VERBOSE_MODE = args.VERBOSE_MODE
+    verbose_mode = args.verbose_mode
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = " -testnet -rpcport={} -datadir=bitcoin-test-data".format(args.testnet) if args.testnet else ""
