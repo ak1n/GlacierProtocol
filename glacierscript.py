@@ -326,7 +326,7 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     require_minimum_bitcoind_version(160000) # addmultisigaddress API changed in v0.16.0
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(bitcoin_cli_call("addmultisigaddress",argstring))
+    return json.loads(bitcoin_cli_call("addmultisigaddress", argstring))
 
 def get_utxos(tx, address):
     """
@@ -354,8 +354,8 @@ def verbose(content):
     if verbose_mode:
         print content
 
-def bitcoin_cli_call(cmd,args):
-    full_cmd = "{0} {1} {2}".format(bitcoin_cli,cmd,args)
+def bitcoin_cli_call(cmd, args):
+    full_cmd = "{0} {1} {2}".format(bitcoin_cli, cmd, args)
     # note: previously space after bitcoind call was in bitconi_cli & related args variables - this removed and placed here (and cli calls outside of this fn had spaces added)
     verbose("\nbitcoin cli call:\n {0} \n".format(full_cmd))
     cmd_output = subprocess.check_output(full_cmd, shell=True)
@@ -394,7 +394,7 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     argstring = "'{0}' '{1}'".format(
         json.dumps(inputs), json.dumps(destinations))
 
-    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction",argstring).strip()
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", argstring).strip()
 
     return tx_unsigned_hex
 
@@ -428,7 +428,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     argstring_2 = "{0} '{1}' '{2}'".format(
         unsigned_hex, json.dumps(inputs), json.dumps(keys))
-    signed_hex = bitcoin_cli_call("signrawtransaction",argstring_2).strip()
+    signed_hex = bitcoin_cli_call("signrawtransaction", argstring_2).strip()
 
     signed_tx = json.loads(signed_hex)
     return signed_tx
@@ -465,7 +465,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction",signed_tx["hex"]))
+        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction", signed_tx["hex"]))
         size = decoded_tx["vsize"]
 
         fee = size * fee_basis_satoshis_per_byte
@@ -729,7 +729,7 @@ def withdraw_interactive():
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
 
-            tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
+            tx = json.loads(bitcoin_cli_call("decoderawtransaction", hex_tx))
             txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
@@ -800,7 +800,7 @@ def withdraw_interactive():
                 print "{0} BTC going back to cold storage address {1}".format(value, address)
             else:
                 print "{0} BTC going to destination address {1}".format(value, address)
-        print "Fee amount: {0} btc ({1} mbtc)".format(fee,btc_to_mbtc(fee))
+        print "Fee amount: {0} btc ({1} mbtc)".format(fee, btc_to_mbtc(fee))
         print "\nSigning with private keys: "
         for key in keys:
             print "{}".format(key)
@@ -845,7 +845,7 @@ def withdraw_interactive():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data','qr-code'])
+                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'qr-code'])
 
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
