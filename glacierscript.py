@@ -501,19 +501,15 @@ def write_and_verify_qr_code(name, filename, data):
     """
 
     # note: it would probably be better to write qr codes to RAM disk or secure volume. while shouldn't contain keys, may increase security by decreasing chance of unencrypted transaction history being discovered
-    QR_SUBDIR = "qrcodes"
+
     QR_SUFFIX = ".png"
     script_root = os.path.dirname(os.path.abspath(__file__))
-    qr_dirpath = script_root + "/" + QR_SUBDIR
-    if not os.path.isdir(qr_dirpath):
-        os.mkdir(qr_dirpath)
-    qr_path = qr_dirpath + "/" + filename + QR_SUFFIX
-    if os.path.exists(qr_path):
-        #print "QR exists at: {0}".format(qr_path)
-        i = 2
-        while os.path.exists(qr_dirpath + "/" + filename + str(i) + QR_SUFFIX):
-            i += 1
-        qr_path = qr_dirpath + "/" + filename + str(i) + QR_SUFFIX
+    qr_path = script_root + "/" + filename + QR_SUFFIX
+    i = 2
+    while os.path.exists(qr_path):
+        print "QR exists at: {0}".format(qr_path)
+        qr_path = script_root + "/" + filename + str(i) + QR_SUFFIX
+        i += 1
 
     subprocess.call("qrencode -o {0} {1}".format(qr_path, data), shell=True)
     check = subprocess.check_output(
