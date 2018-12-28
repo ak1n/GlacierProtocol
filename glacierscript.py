@@ -500,8 +500,6 @@ def write_and_verify_qr_code(name, filename, data):
     data: <string> the data to be encoded
     """
 
-    # note: it would probably be better to write qr codes to RAM disk or secure volume. while shouldn't contain keys, may increase security by decreasing chance of unencrypted transaction history being discovered
-
     QR_SUFFIX = ".png"
     script_root = os.path.dirname(os.path.abspath(__file__))
     qr_path = script_root + "/" + filename + QR_SUFFIX
