@@ -272,7 +272,7 @@ def ensure_bitcoind_running():
     times = 0
     while times <= 20:
         times += 1
-        if subprocess.call(bitcoin_cli + "getnetworkinfo", shell=True, stdout=devnull, stderr=devnull) == 0:
+        if subprocess.call(bitcoin_cli + " getnetworkinfo", shell=True, stdout=devnull, stderr=devnull) == 0:
             return
         time.sleep(0.5)
 
@@ -283,7 +283,7 @@ def require_minimum_bitcoind_version(min_version):
     Fail if the bitcoind version in use is older than required
     <min_version> - required minimum version in format of getnetworkinfo, i.e. 150100 for v0.15.1
     """
-    networkinfo_str = subprocess.check_output(bitcoin_cli + "getnetworkinfo", shell=True)
+    networkinfo_str = subprocess.check_output(bitcoin_cli + " getnetworkinfo", shell=True)
     networkinfo = json.loads(networkinfo_str)
 
     if int(networkinfo["version"]) < min_version:
@@ -305,9 +305,9 @@ def get_address_for_wif_privkey(privkey):
 
     ensure_bitcoind_running()
     subprocess.call(
-        bitcoin_cli + "importprivkey {0} {1}".format(privkey, account_number), shell=True)
+        bitcoin_cli + " importprivkey {0} {1}".format(privkey, account_number), shell=True)
     addresses = subprocess.check_output(
-        bitcoin_cli + "getaddressesbyaccount {0}".format(account_number), shell=True)
+        bitcoin_cli + " getaddressesbyaccount {0}".format(account_number), shell=True)
 
     # extract address from JSON output
     addresses_json = json.loads(addresses)
@@ -355,8 +355,8 @@ def verbose(content):
         print content
 
 def bitcoin_cli_call(cmd,args):
-    full_cmd = "{0}{1} {2}".format(bitcoin_cli,cmd,args)
-    # note glacier has a space after bitcoind call in "bitcoin_cli" variable
+    full_cmd = "{0} {1} {2}".format(bitcoin_cli,cmd,args)
+    # note: previously space after bitcoind call was in bitconi_cli & related args variables - this removed and placed here (and cli calls outside of this fn had spaces added)
     verbose("\nbitcoin cli call:\n {0} \n".format(full_cmd))
     cmd_output = subprocess.check_output(full_cmd, shell=True)
     verbose("\ncli output:\n {0} \n\n".format(cmd_output))
@@ -870,10 +870,10 @@ if __name__ == "__main__":
     VERBOSE_MODE = args.VERBOSE_MODE
 
     global bitcoind, bitcoin_cli, wif_prefix
-    cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
+    cli_args = " -testnet -rpcport={} -datadir=bitcoin-test-data".format(args.testnet) if args.testnet else ""
     wif_prefix = "EF" if args.testnet else "80"
     bitcoind = "bitcoind " + cli_args
-    bitcoin_cli = "bitcoin-cli " + cli_args
+    bitcoin_cli = "bitcoin-cli" + cli_args
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
