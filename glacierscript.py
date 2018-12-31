@@ -256,14 +256,16 @@ def ensure_bitcoind_running():
     # 2. Remove this -deprecatedrpc=signrawtransaction
     # 3. Change getaddressesbyaccount to getaddressesbylabel
     # 4. Remove this -deprecatedrpc=accounts
-    subprocess.call(bitcoind + "-daemon -connect=0.0.0.0 -deprecatedrpc=signrawtransaction -deprecatedrpc=accounts",
-                    shell=True, stdout=devnull, stderr=devnull)
+    #subprocess.call(bitcoind + "-daemon -connect=0.0.0.0 -deprecatedrpc=signrawtransaction -deprecatedrpc=accounts",
+    #               shell=True, stdout=devnull, stderr=devnull)
+    bitcoin_cli_call("","-daemon -connect=0.0.0.0 -deprecatedrpc=signrawtransaction -deprecatedrpc=accounts", use_bitcoind=1, call_type=1, stdout=devnull, stderr=devnull)
 
     # verify bitcoind started up and is functioning correctly
     times = 0
     while times <= 20:
         times += 1
-        if subprocess.call(bitcoin_cli + "getnetworkinfo", shell=True, stdout=devnull, stderr=devnull) == 0:
+        #if subprocess.call(bitcoin_cli + "getnetworkinfo", shell=True, stdout=devnull, stderr=devnull) == 0:
+        if bitcoin_cli_call("getnetworkinfo", "", call_type=1, stdout=devnull, stderr=devnull) == 0:
             return
         time.sleep(0.5)
 
@@ -274,7 +276,9 @@ def require_minimum_bitcoind_version(min_version):
     Fail if the bitcoind version in use is older than required
     <min_version> - required minimum version in format of getnetworkinfo, i.e. 150100 for v0.15.1
     """
-    networkinfo_str = subprocess.check_output(bitcoin_cli + "getnetworkinfo", shell=True)
+    networkinfo_str = bitcoin_cli_call("getnetworkinfo","")
+    #networkinfo_str = subprocess.check_output(bitcoin_cli + "getnetworkinfo", shell=True)
+
     networkinfo = json.loads(networkinfo_str)
 
     if int(networkinfo["version"]) < min_version:
@@ -295,10 +299,12 @@ def get_address_for_wif_privkey(privkey):
     account_number = random.randint(0, 2**128)
 
     ensure_bitcoind_running()
-    subprocess.call(
-        bitcoin_cli + "importprivkey {0} {1}".format(privkey, account_number), shell=True)
-    addresses = subprocess.check_output(
-        bitcoin_cli + "getaddressesbyaccount {0}".format(account_number), shell=True)
+    #subprocess.call(
+    #    bitcoin_cli + "importprivkey {0} {1}".format(privkey, account_number), shell=True)
+    bitcoin_cli_call("importprivkey","{0} {1}".format(privkey, account_number),call_type=1)
+    addresses = bitcoin_cli_call("getaddressesbyaccount",account_number)
+    #addresses = subprocess.check_output(
+    #    bitcoin_cli + "getaddressesbyaccount {0}".format(account_number), shell=True)
 
     # extract address from JSON output
     addresses_json = json.loads(addresses)
@@ -317,8 +323,9 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     require_minimum_bitcoind_version(160000) # addmultisigaddress API changed in v0.16.0
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(subprocess.check_output(
-        bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
+    return json.loads(bitcoin_cli_call("addmultisigaddress",argstring))
+    #return json.loads(subprocess.check_output(
+    #    bitcoin_cli + "addmultisigaddress {0}".format(argstring), shell=True))
 
 def get_utxos(tx, address):
     """
@@ -341,6 +348,28 @@ def get_utxos(tx, address):
 
     return utxos
 
+def bitcoin_cli_call(cmd="", args="", **optargs):
+    # all bitcoind & bitcoin-cli calls go through this function
+    # optargs parsing:
+    #  use_bitcoind: if 1 then bitcoind will be root cmd rather than bitcoin_cli
+    #  call_type: if 1 the subprocess.call will be used instead of .checkoutput
+    #  stdout or stderr: if passed here they will be passed along to subprocess calls
+    # defaults paramters: bitcoin_cli, subprocess.check_output, shell=True
+    daemon_or_client = bitcoind if optargs.get('use_bitcoind', None) is 1 else bitcoin_cli
+    if cmd is not "": cmd = " {0}".format(cmd)
+    if args is not "": args = " {0}".format(args)
+    full_cmd = "{0}{1}{2}".format(daemon_or_client, cmd, args)
+    subprocess_args = { 'shell': True }
+    for var in ('stdout', 'stderr'):
+        if var in optargs: subprocess_args.update({ var: optargs.get(var) })
+
+    #print "full cmd:\n {0}\n   subp args: {1}\n".format(full_cmd,subprocess_args)
+
+    if optargs.get('call_type', None) is 1:
+        cmd_output = subprocess.call(full_cmd, **subprocess_args)
+    else:
+        cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
+    return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
     """
@@ -374,8 +403,9 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
     argstring = "'{0}' '{1}'".format(
         json.dumps(inputs), json.dumps(destinations))
 
-    tx_unsigned_hex = subprocess.check_output(
-        bitcoin_cli + "createrawtransaction {0}".format(argstring), shell=True).strip()
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction",argstring).strip()
+    #tx_unsigned_hex = subprocess.check_output(
+    #    bitcoin_cli + "createrawtransaction {0}".format(argstring), shell=True).strip()
 
     return tx_unsigned_hex
 
@@ -409,8 +439,9 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     argstring_2 = "{0} '{1}' '{2}'".format(
         unsigned_hex, json.dumps(inputs), json.dumps(keys))
-    signed_hex = subprocess.check_output(
-        bitcoin_cli + "signrawtransaction {0}".format(argstring_2), shell=True).strip()
+    signed_hex = bitcoin_cli_call("signrawtransaction",argstring_2).strip()
+    #signed_hex = subprocess.check_output(
+    #    bitcoin_cli + "signrawtransaction {0}".format(argstring_2), shell=True).strip()
 
     signed_tx = json.loads(signed_hex)
     return signed_tx
@@ -447,8 +478,9 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
+        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction",signed_tx["hex"]))
+        #decoded_tx = json.loads(subprocess.check_output(
+        #        bitcoin_cli + "decoderawtransaction {0}".format(signed_tx["hex"]), shell=True))
         size = decoded_tx["vsize"]
 
         fee = size * fee_basis_satoshis_per_byte
@@ -687,8 +719,9 @@ def withdraw_interactive():
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
 
-            tx = json.loads(subprocess.check_output(
-                bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
+            tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
+            #tx = json.loads(subprocess.check_output(
+            #    bitcoin_cli + "decoderawtransaction {0}".format(hex_tx), shell=True))
             txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
