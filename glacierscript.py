@@ -23,7 +23,7 @@
 #
 ################################################################################################
 
-# test comment
+# test comment .
 
 # standard Python libraries
 import time
