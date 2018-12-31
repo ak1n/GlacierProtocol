@@ -23,6 +23,8 @@
 #
 ################################################################################################
 
+# test comment
+
 # standard Python libraries
 import time
 import argparse
