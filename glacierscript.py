@@ -353,6 +353,7 @@ def bitcoin_cli_call(cmd="", args="", **optargs):
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0}{1}{2}".format(daemon_or_client, cmd, args)
     subprocess_args = { 'shell': True }
+    verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
     for var in ('stdout', 'stderr'):
         if var in optargs: subprocess_args.update({ var: optargs.get(var) })
 
@@ -360,6 +361,7 @@ def bitcoin_cli_call(cmd="", args="", **optargs):
         cmd_output = subprocess.call(full_cmd, **subprocess_args)
     else:
         cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
+    verbose("bitcoin cli call output:\n  {0}\n".format(cmd_output))
     return cmd_output
 
 def create_unsigned_transaction(source_address, destinations, redeem_script, input_txs):
