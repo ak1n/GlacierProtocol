@@ -833,8 +833,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-n", type=int, help="Number of total keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=2)
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
+    parser.add_argument('-v', action='store_const', default=0, dest='verbose_mode', const=1,
+                        help='increase output verbosity')
     args = parser.parse_args()
 
+    verbose_mode = args.verbose_mode
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
