@@ -40,6 +40,7 @@ from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
 
+verbose_mode = 0
 
 ################################################################################################
 #
@@ -336,6 +337,9 @@ def get_utxos(tx, address):
             utxos.append(output)
 
     return utxos
+
+def verbose(content):
+    if verbose_mode: print content
 
 def bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
