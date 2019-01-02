@@ -411,6 +411,43 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
 
     return tx_unsigned_hex
 
+def get_input_txs(tx,utxos,redeem_script):
+    # get input transactions data prepared for utxos used in w/d from cold storage
+    # tx: the specific input tx that will be parsed for this data
+    #
+    # args:
+    #    txs: unprocessed input tx
+    # output: processed input txs
+    # calls get_utxos to verify has source address & utxos
+
+
+    inputs = []
+    #txid = tx["txid"]
+    for utxo in utxos:
+        inputs.append({
+            "txid": tx["txid"],
+            "vout": int(utxo["n"]),
+            "amount": utxo["value"],
+            "scriptPubKey": utxo["scriptPubKey"]["hex"],
+            "redeemScript": redeem_script
+        })
+    return inputs
+
+    # re-sign tx
+    #re_sign_input_txs = []
+    #txid = tx["txid"]
+    #for utxo in utxos:
+    #    re_sign_input_txs.append({
+    #        "txid": txid,
+    #        "vout": int(utxo["n"]),
+    #        "amount": utxo["value"],
+    #        "scriptPubKey": utxo["scriptPubKey"]["hex"],
+    #        "redeemScript": redeem_script
+    #    })
+
+def re_sign_transaction(part_signed_tx_hex,re_sign_input_txs,keys):
+    resign_args = "{0} '{1}' '{2}'".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
+    return json.loads(bitcoin_cli_call("signrawtransaction",resign_args))
 
 def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_txs):
     """
@@ -426,18 +463,20 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
 
     # For each UTXO used as input, we need the txid, vout index, scriptPubKey, amount, and redeemScript
     # to generate a signature
+    #inputs = get_input_txs(input_txs)
     inputs = []
     for tx in input_txs:
         utxos = get_utxos(tx, source_address)
-        txid = tx["txid"]
-        for utxo in utxos:
-            inputs.append({
-                "txid": txid,
-                "vout": int(utxo["n"]),
-                "amount": utxo["value"],
-                "scriptPubKey": utxo["scriptPubKey"]["hex"],
-                "redeemScript": redeem_script
-            })
+        inputs = get_input_txs(tx,uxtos,redeem_script)
+        #txid = tx["txid"]
+        #for utxo in utxos:
+        #    inputs.append({
+        #        "txid": txid,
+        #        "vout": int(utxo["n"]),
+        #        "amount": utxo["value"],
+        #        "scriptPubKey": utxo["scriptPubKey"]["hex"],
+        #        "redeemScript": redeem_script
+        #    })
 
     argstring_2 = "{0} '{1}' '{2}'".format(
         unsigned_hex, json.dumps(inputs), json.dumps(keys))
@@ -701,12 +740,22 @@ def deposit_interactive(m, n, dice_seed_length=62, rng_seed_length=20):
 #
 ################################################################################################
 
-def withdraw_interactive():
-    """
-    Construct and sign a transaction to withdaw funds from cold storage
-    All data required for transaction construction is input at the terminal
-    """
+# following fn should be moved to helper fns
+def get_raw_tx_interactive(unique_init_prompt):
+    print "\n{0}".format(unique_init_prompt)
+    print "\n  Please paste the raw transaction (hexadecimal format) with unspent outputs at the source address"
+    print "  OR"
+    print "  input a filename located in the current directory which contains the raw transaction data"
+    print "  (If the transaction data is over ~4000 characters long, you _must_ use a file.):"
 
+    raw_tx = raw_input()
+    if os.path.isfile(raw_tx):
+        raw_tx = open(raw_tx).read().strip()
+    return raw_tx
+
+def re_sign_interactive():
+    # start common block
+    # end common block
     safety_checklist()
     ensure_bitcoind_running()
 
@@ -720,20 +769,263 @@ def withdraw_interactive():
 
         source_address = raw_input("\nSource cold storage address: ")
 
+        # TESTING: end w/d common (including start but not end of while loop)
+        # TESTING: w/d unique to re-sign
+        # begin main re-sign code block
+        # MAYBE could be put into a ~re_sign_parse_tx fn, but would be messy w so many variables being assigned
+
+        part_signed_hex_tx = get_raw_tx_interactive("For the partially-signed transaction")
+
+        part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
+        redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
+        num_tx = len(part_signed_tx["vin"])
+
+        # parse change amount & destination address from partly-signed data
+        if len(part_signed_tx["vout"]) is 1:
+            verbose("only 1 transaction output indicates entire balance being withdrawn (change amount = 0)")
+            #thus destination address data in vout[0]
+            change_amount = Decimal(0)
+            withdrawal_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
+            dest_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+        else:
+            verbose("multiple outputs indicates change to be delivered back to cold storage address")
+            # ascertain where destination and change addresses are in vout array
+            cold_storage_vout_index = -1
+            destination_vout_index = -1
+            i = 0
+            for output in part_signed_tx["vout"]:
+                for address in output["scriptPubKey"]["addresses"]:
+                    if address == source_address:
+                        cold_storage_vout_index = i
+                        break
+                i += 1
+
+            if cold_storage_vout_index is -1:
+                print "could not find cold storage source address in partially signed transaction hex (more than 1 output without cold address found in these for change!)! exiting..."
+                sys.exit()
+            if cold_storage_vout_index == 0:
+                destination_vout_index = 1
+            else:
+                destination_vout_index = 0
+            dest_address = part_signed_tx["vout"][destination_vout_index]["scriptPubKey"]["addresses"][0]
+
+            # now parse out amounts knowing array positions of source/destination vouts
+            change_amount = Decimal(part_signed_tx["vout"][cold_storage_vout_index]["value"]).quantize(SATOSHI_PLACES)
+            withdrawal_amount = Decimal(part_signed_tx["vout"][destination_vout_index]["value"]).quantize(SATOSHI_PLACES)
+
+        print"\nfollowing variables parsed from partially signed hex input:"
+        print "\n    cold storage / source_address: {0}".format(source_address)
+        print "\n    redemption script: {0}".format(redeem_script)
+        print "\n    destination address: {0}".format(dest_address)
+        print "\n    number of input transactions: {0}".format(num_tx)
+        print "\n    change amount: {0}".format(change_amount)
+        print "\n    withdrawal amount: {0}".format(withdrawal_amount)
+
+        print "\n\nplease confirm whether above data is correct before proceeding to input additional data for transaction re-sign"
+        confirm = yes_no_interactive()
+        if not confirm:
+            print "auto parsed data from transaction incorrect so aborting"
+            sys.exit()
+        # end main re-sign code block (else from if RE_SIGN_MODE is not 1)
+
+        # TESTING: w/d common to full & re-sign
+        addresses[source_address] = 0
+        addresses[dest_address] = 0
+
+        # input_txs was "txs" (renamed for clarity)
+        input_txs = []
+        utxos = []
+        utxo_sum = Decimal(0).quantize(SATOSHI_PLACES)
+
+        while len(input_txs) < num_tx:
+            hex_tx = get_raw_tx_interactive("For input transaction #{}".format(len(input_txs) + 1))
+
+            tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
+            input_txs.append(tx)
+            utxos += get_utxos(tx, source_address)
+
+        if len(utxos) == 0:
+            print "\nTransaction data not found for source address: {}".format(source_address)
+            sys.exit()
+        else:
+            print "\nTransaction data found for source address."
+
+            for utxo in utxos:
+                value = Decimal(utxo["value"]).quantize(SATOSHI_PLACES)
+                utxo_sum += value
+
+            print "TOTAL unspent amount for this raw transaction: {} BTC".format(utxo_sum)
+
+        print "\nHow many private keys will you be signing this transaction with? "
+        key_count = int(raw_input("#: "))
+
+        keys = []
+        while len(keys) < key_count:
+            key = raw_input("Key #{0}: ".format(len(keys) + 1))
+            keys.append(key)
+
+        ###### fees, amount, and change #######
+
+        input_amount = utxo_sum
+
+        # TESTING: w/d end common to full & re-sign
+
+        # exclude re-sign mode from running fee calculation function again
+
+        # TESTING: w/d unisque to re-sign
+        fee = input_amount - withdrawal_amount - change_amount
+
+        # TESTING: w/d common to full & re-sign
+        addresses[dest_address] = str(withdrawal_amount)
+        addresses[source_address] = str(change_amount)
+
+        # check data
+        print "\nIs this data correct?"
+        print "*** WARNING: Incorrect data may lead to loss of funds ***\n"
+
+        print "{0} BTC in unspent supplied transactions".format(input_amount)
+        for address, value in addresses.iteritems():
+            if address == source_address:
+                print "{0} BTC going back to cold storage address {1}".format(value, address)
+            else:
+                print "{0} BTC going to destination address {1}".format(value, address)
+        print "Fee amount: {0} btc ({1} mbtc)".format(fee,btc_to_mbtc(fee))
+        print "\nSigning with private keys: "
+        for key in keys:
+            print "{}".format(key)
+
+        print "\n"
+        confirm = yes_no_interactive()
+
+        if confirm:
+            approve = True
+        else:
+            print "\nProcess aborted. Starting over...."
+    # end while not approve
+
+    #### Calculate Transaction ####
+    print "\nCalculating transaction...\n"
+
+    # TESTING: w/d unique to full
+
+    # TESTING: w/d unique to re-sign
+    re_sign_input_txs = get_input_txs(tx,uxtos,redeem_script)
+    #re_sign_input_txs = []
+    #txid = tx["txid"]
+    #for utxo in utxos:
+    #    re_sign_input_txs.append({
+    #        "txid": txid,
+    #        "vout": int(utxo["n"]),
+    #        "amount": utxo["value"],
+    #        "scriptPubKey": utxo["scriptPubKey"]["hex"],
+    #        "redeemScript": redeem_script
+    #    })
+    resign_args = "{0} '{1}' '{2}'".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
+    signed_tx = json.loads(bitcoin_cli_call("signrawtransaction",resign_args))
+
+    # TESTING: w/d common to full & re-sign
+    #  vars: needed (signed_tx), returned (none)
+    print "\nSufficient private keys to execute transaction?"
+    print signed_tx["complete"]
+
+    print "\nRaw signed transaction (hex):"
+    print signed_tx["hex"]
+
+    print "\nTransaction fingerprint (md5):"
+    print hash_md5(signed_tx["hex"])
+
+    write_and_verify_qr_code("transaction", "transaction", signed_tx["hex"])
+    # end re-sign fn
+
+def parse_part_signed_tx():
+    # ins:
+    # outs: part_signed_hx, redeem, num_tx
+    part_signed_hex_tx = get_raw_tx_interactive("For the partially-signed transaction")
+
+    part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
+    redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
+    num_tx = len(part_signed_tx["vin"])
+
+    # parse change amount & destination address from partly-signed data
+    if len(part_signed_tx["vout"]) is 1:
+        verbose("only 1 transaction output indicates entire balance being withdrawn (change amount = 0)")
+        #thus destination address data in vout[0]
+        change_amount = Decimal(0)
+        withdrawal_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
+        dest_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+    else:
+        verbose("multiple outputs indicates change to be delivered back to cold storage address")
+        # ascertain where destination and change addresses are in vout array
+        cold_storage_vout_index = -1
+        destination_vout_index = -1
+        i = 0
+        for output in part_signed_tx["vout"]:
+            for address in output["scriptPubKey"]["addresses"]:
+                if address == source_address:
+                    cold_storage_vout_index = i
+                    break
+            i += 1
+
+        if cold_storage_vout_index is -1:
+            print "could not find cold storage source address in partially signed transaction hex (more than 1 output without cold address found in these for change!)! exiting..."
+            sys.exit()
+        if cold_storage_vout_index == 0:
+            destination_vout_index = 1
+        else:
+            destination_vout_index = 0
+        dest_address = part_signed_tx["vout"][destination_vout_index]["scriptPubKey"]["addresses"][0]
+
+        # now parse out amounts knowing array positions of source/destination vouts
+        change_amount = Decimal(part_signed_tx["vout"][cold_storage_vout_index]["value"]).quantize(SATOSHI_PLACES)
+        withdrawal_amount = Decimal(part_signed_tx["vout"][destination_vout_index]["value"]).quantize(SATOSHI_PLACES)
+
+    print"\nfollowing variables parsed from partially signed hex input:"
+    print "\n    cold storage / source_address: {0}".format(source_address)
+    print "\n    redemption script: {0}".format(redeem_script)
+    print "\n    destination address: {0}".format(dest_address)
+    print "\n    number of input transactions: {0}".format(num_tx)
+    print "\n    change amount: {0}".format(change_amount)
+    print "\n    withdrawal amount: {0}".format(withdrawal_amount)
+
+    print "\n\nplease confirm whether above data is correct before proceeding to input additional data for transaction re-sign"
+    confirm = yes_no_interactive()
+    if not confirm:
+        print "auto parsed data from transaction incorrect so aborting"
+        sys.exit()
+    # end main re-sign code block
+
+def withdraw_interactive():
+    """
+    Construct and sign a transaction to withdaw funds from cold storage
+    All data required for transaction construction is input at the terminal
+    """
+
+    # TESTING: w/d common to full & re-sign
+    safety_checklist()
+    ensure_bitcoind_running()
+
+    approve = False
+
+    while not approve:
+        addresses = {}
+
+        print "\nYou will need to enter several pieces of information to create a withdrawal transaction."
+        print "\n\n*** PLEASE BE SURE TO ENTER THE CORRECT DESTINATION ADDRESS ***\n"
+
+        source_address = raw_input("\nSource cold storage address: ")
+
+        # TESTING: end w/d common (including start but not end of while loop)
         if RE_SIGN_MODE is not 1:
+            # TESTING: w/d unique to full-sign
             redeem_script = raw_input("\nRedemption script for source cold storage address: ")
             dest_address = raw_input("\nDestination address: ")
             num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
         else:
+            # TESTING: w/d unique to re-sign
             # begin main re-sign code block
-            print "\nPlease paste the partially-signed raw transaction (hexadecimal format) with unspent outputs at the source address"
-            print "OR"
-            print "input a filename located in the current directory which contains the raw transaction data"
-            print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
+            # MAYBE could be put into a ~re_sign_parse_tx fn, but would be messy w so many variables being assigned
 
-            part_signed_hex_tx = raw_input()
-            if os.path.isfile(part_signed_hex_tx):
-                part_signed_hex_tx = open(part_signed_hex_tx).read().strip()
+            part_signed_hex_tx = get_raw_tx_interactive("For the partially-signed transaction")
 
             part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_hex_tx))
             redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
@@ -787,6 +1079,7 @@ def withdraw_interactive():
                 sys.exit()
             # end main re-sign code block
 
+        # TESTING: w/d common to full & re-sign
         addresses[source_address] = 0
         addresses[dest_address] = 0
 
@@ -796,14 +1089,7 @@ def withdraw_interactive():
         utxo_sum = Decimal(0).quantize(SATOSHI_PLACES)
 
         while len(input_txs) < num_tx:
-            print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(input_txs) + 1)
-            print "OR"
-            print "input a filename located in the current directory which contains the raw transaction data"
-            print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
-
-            hex_tx = raw_input()
-            if os.path.isfile(hex_tx):
-                hex_tx = open(hex_tx).read().strip()
+            hex_tx = get_raw_tx_interactive("For input transaction #{}".format(len(input_txs) + 1))
 
             tx = json.loads(bitcoin_cli_call("decoderawtransaction",hex_tx))
             input_txs.append(tx)
@@ -832,8 +1118,12 @@ def withdraw_interactive():
         ###### fees, amount, and change #######
 
         input_amount = utxo_sum
+
+        # TESTING: w/d end common to full & re-sign
+
         # exclude re-sign mode from running fee calculation function again
         if RE_SIGN_MODE is not 1:
+            # TESTING: w/d unique to full
             fee = get_fee_interactive(
                 source_address, keys, addresses, redeem_script, input_txs)
             # Got this far
@@ -865,8 +1155,10 @@ def withdraw_interactive():
             if change_amount > 0:
                 print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
         else:
+            # TESTING: w/d unisque to re-sign
             fee = input_amount - withdrawal_amount - change_amount
 
+        # TESTING: w/d common to full & re-sign
         addresses[dest_address] = str(withdrawal_amount)
         addresses[source_address] = str(change_amount)
 
@@ -892,10 +1184,12 @@ def withdraw_interactive():
             approve = True
         else:
             print "\nProcess aborted. Starting over...."
+    # end while not approve
 
     #### Calculate Transaction ####
     print "\nCalculating transaction...\n"
 
+    # TESTING: w/d unique to full
     if RE_SIGN_MODE is not 1:
         unsigned_tx = create_unsigned_transaction(
             source_address, addresses, redeem_script, input_txs)
@@ -903,19 +1197,23 @@ def withdraw_interactive():
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
     else:
-        re_sign_input_txs = []
-        txid = tx["txid"]
-        for utxo in utxos:
-            re_sign_input_txs.append({
-                "txid": txid,
-                "vout": int(utxo["n"]),
-                "amount": utxo["value"],
-                "scriptPubKey": utxo["scriptPubKey"]["hex"],
-                "redeemScript": redeem_script
-            })
+        # TESTING: w/d unique to re-sign
+        re_sign_input_txs = get_input_txs(tx,uxtos,redeem_script)
+        #re_sign_input_txs = []
+        #txid = tx["txid"]
+        #for utxo in utxos:
+        #    re_sign_input_txs.append({
+        #        "txid": txid,
+        #        "vout": int(utxo["n"]),
+        #        "amount": utxo["value"],
+        #        "scriptPubKey": utxo["scriptPubKey"]["hex"],
+        #        "redeemScript": redeem_script
+        #    })
         resign_args = "{0} '{1}' '{2}'".format(part_signed_hex_tx, json.dumps(re_sign_input_txs), json.dumps(keys))
         signed_tx = json.loads(bitcoin_cli_call("signrawtransaction",resign_args))
 
+    # TESTING: w/d common to full & re-sign
+    #  vars: needed (signed_tx), returned (none)
     print "\nSufficient private keys to execute transaction?"
     print signed_tx["complete"]
 
@@ -926,6 +1224,7 @@ def withdraw_interactive():
     print hash_md5(signed_tx["hex"])
 
     write_and_verify_qr_code("transaction", "transaction", signed_tx["hex"])
+# end w/d fn
 
 ################################################################################################
 #
