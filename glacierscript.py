@@ -42,6 +42,8 @@ SATOSHI_PLACES = Decimal("0.00000001")
 
 verbose_mode = 0
 
+re_sign_mode = 0
+
 ################################################################################################
 #
 # Minor helper functions
@@ -822,7 +824,7 @@ def withdraw_interactive():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('program', choices=[
-                        'entropy', 'create-deposit-data', 'create-withdrawal-data'])
+                        'entropy', 'create-deposit-data', 'create-withdrawal-data', 'sign-transaction'])
 
     parser.add_argument("--num-keys", type=int,
                         help="The number of keys to create random entropy for", default=1)
@@ -854,4 +856,9 @@ if __name__ == "__main__":
         deposit_interactive(args.m, args.n, args.dice, args.rng)
 
     if args.program == "create-withdrawal-data":
+        withdraw_interactive()
+
+    if args.program == "sign-transaction":
+        # Sign an existing transaction (i.e. add a signature to partially signed tx) to withdaw funds from cold storage
+        re_sign_mode = 1
         withdraw_interactive()
