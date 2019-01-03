@@ -827,11 +827,16 @@ def withdraw_interactive():
         ###### fees, amount, and change #######
 
         input_amount = utxo_sum
-        fee = get_fee_interactive(
-            source_address, keys, addresses, redeem_script, input_txs)
-        # Got this far
-        check_fee_to_input_amt(fee, input_amount)
-        withdrawal_amount, change_amount = withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address)
+
+        if re_sign_mode is not 1:
+            fee = get_fee_interactive(
+                source_address, keys, addresses, redeem_script, input_txs)
+            # Got this far
+            check_fee_to_input_amt(fee, input_amount)
+            withdrawal_amount, change_amount = withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address)
+        else:
+            fee = input_amount - withdrawal_amount - change_amount
+            check_fee_to_input_amt(fee, input_amount)
 
         addresses[dest_address] = str(withdrawal_amount)
         addresses[source_address] = str(change_amount)
