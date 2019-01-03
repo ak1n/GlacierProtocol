@@ -340,6 +340,64 @@ def get_utxos(tx, address):
 
     return utxos
 
+def parse_part_signed_tx():
+    # parses partially-signed transaction
+    # manually receives tx hex (included as fn output)
+    # fn outputs parsed: redeem_script, dest_address, change_amount, amount
+    part_signed_tx_hex = get_raw_tx_interactive("For the partially-signed transaction")
+
+    part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_tx_hex))
+    redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
+    num_tx = len(part_signed_tx["vin"])
+
+    # parse change amount & destination address from partly-signed data
+    if len(part_signed_tx["vout"]) is 1:
+        verbose("only 1 transaction output indicates entire balance being withdrawn (change amount = 0)")
+        #thus destination address data in vout[0]
+        change_amount = Decimal(0)
+        withdrawal_amount = Decimal(part_signed_tx["vout"][0]["value"]).quantize(SATOSHI_PLACES)
+        dest_address = part_signed_tx["vout"][0]["scriptPubKey"]["addresses"][0]
+    else:
+        verbose("multiple outputs indicates change to be delivered back to cold storage address")
+        # ascertain where destination and change addresses are in vout array
+        cold_storage_vout_index = -1
+        destination_vout_index = -1
+        i = 0
+        for output in part_signed_tx["vout"]:
+            for address in output["scriptPubKey"]["addresses"]:
+                if address == source_address:
+                    cold_storage_vout_index = i
+                    break
+            i += 1
+
+        if cold_storage_vout_index is -1:
+            print "could not find cold storage source address in partially signed transaction hex (more than 1 output without cold address found in these for change!)! exiting..."
+            sys.exit()
+        if cold_storage_vout_index == 0:
+            destination_vout_index = 1
+        else:
+            destination_vout_index = 0
+        dest_address = part_signed_tx["vout"][destination_vout_index]["scriptPubKey"]["addresses"][0]
+
+        # now parse out amounts knowing array positions of source/destination vouts
+        change_amount = Decimal(part_signed_tx["vout"][cold_storage_vout_index]["value"]).quantize(SATOSHI_PLACES)
+        withdrawal_amount = Decimal(part_signed_tx["vout"][destination_vout_index]["value"]).quantize(SATOSHI_PLACES)
+
+    print"\nfollowing variables parsed from partially signed hex input:"
+    print "\n    cold storage / source_address: {0}".format(source_address)
+    print "\n    redemption script: {0}".format(redeem_script)
+    print "\n    destination address: {0}".format(dest_address)
+    print "\n    number of input transactions: {0}".format(num_tx)
+    print "\n    change amount: {0}".format(change_amount)
+    print "\n    withdrawal amount: {0}".format(withdrawal_amount)
+
+    print "\n\nplease confirm whether above data is correct before proceeding to input additional data for transaction re-sign"
+    confirm = yes_no_interactive()
+    if not confirm:
+        print "auto parsed data from transaction incorrect so aborting"
+        sys.exit()
+    return part_signed_tx_hex, redeem_script, dest_address, change_amount, amount
+
 def verbose(content):
     if verbose_mode: print content
 
