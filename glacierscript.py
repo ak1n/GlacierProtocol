@@ -933,5 +933,9 @@ if __name__ == "__main__":
 
     if args.program == "sign-transaction":
         # Sign an existing transaction (i.e. add a signature to partially signed tx) to withdaw funds from cold storage
+        print "\n\nSequential signing of transactions supports ONLY Segwit wallets/transactions. This will not work with non-segwit wallets/transactions. Proceeding with non-segwit wallets/transactions RISKS LOSS OF FUNDS. Please confirm using segwit to proceed."
+        if not yes_no_interactive():
+            print "\ncould not confirm segwit to proceed with sequential transaction signing...exiting"
+            sys.exit()
         re_sign_mode = 1
         withdraw_interactive()
