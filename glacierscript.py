@@ -340,6 +340,11 @@ def get_utxos(tx, address):
 
     return utxos
 
+def check_fee_to_input_amt(fee, input_amount):
+    if fee > input_amount:
+        print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
+        sys.exit()
+
 def parse_part_signed_tx():
     # parses partially-signed transaction
     # manually receives tx hex (included as fn output)
@@ -796,9 +801,7 @@ def withdraw_interactive():
         fee = get_fee_interactive(
             source_address, keys, addresses, redeem_script, txs)
         # Got this far
-        if fee > input_amount:
-            print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
-            sys.exit()
+        check_fee_to_input_amt(fee, input_amount)
 
         print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
         print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
