@@ -867,8 +867,9 @@ def withdraw_interactive():
     #### Calculate Transaction ####
     print "\nCalculating transaction...\n"
 
-    unsigned_tx = create_unsigned_transaction(
-        source_address, addresses, redeem_script, input_txs)
+    if re_sign_mode is not 1:
+        unsigned_tx = create_unsigned_transaction(
+            source_address, addresses, redeem_script, input_txs)
 
     signed_tx = sign_transaction(source_address, keys,
                                  redeem_script, unsigned_tx, input_txs)
