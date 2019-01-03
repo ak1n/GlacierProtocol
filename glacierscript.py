@@ -786,12 +786,12 @@ def withdraw_interactive():
         addresses[source_address] = 0
         addresses[dest_address] = 0
 
-        txs = []
+        input_txs = []
         utxos = []
         utxo_sum = Decimal(0).quantize(SATOSHI_PLACES)
 
-        while len(txs) < num_tx:
-            print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(txs) + 1)
+        while len(input_txs) < num_tx:
+            print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(input_txs) + 1)
             print "OR"
             print "input a filename located in the current directory which contains the raw transaction data"
             print "(If the transaction data is over ~4000 characters long, you _must_ use a file.):"
@@ -801,7 +801,7 @@ def withdraw_interactive():
                 hex_tx = open(hex_tx).read().strip()
 
             tx = json.loads(bitcoin_cli_call("decoderawtransaction", hex_tx))
-            txs.append(tx)
+            input_txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
         if len(utxos) == 0:
@@ -828,7 +828,7 @@ def withdraw_interactive():
 
         input_amount = utxo_sum
         fee = get_fee_interactive(
-            source_address, keys, addresses, redeem_script, txs)
+            source_address, keys, addresses, redeem_script, input_txs)
         # Got this far
         check_fee_to_input_amt(fee, input_amount)
         withdrawal_amount, change_amount = withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address)
@@ -863,10 +863,10 @@ def withdraw_interactive():
     print "\nCalculating transaction...\n"
 
     unsigned_tx = create_unsigned_transaction(
-        source_address, addresses, redeem_script, txs)
+        source_address, addresses, redeem_script, input_txs)
 
     signed_tx = sign_transaction(source_address, keys,
-                                 redeem_script, unsigned_tx, txs)
+                                 redeem_script, unsigned_tx, input_txs)
 
     print "\nSufficient private keys to execute transaction?"
     print signed_tx["complete"]
