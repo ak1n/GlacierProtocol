@@ -83,6 +83,8 @@ def btc_to_satoshi(btc):
     value = btc * 100000000
     return int(value)
 
+def verbose(content):
+    if verbose_mode: print content
 
 ################################################################################################
 #
@@ -337,9 +339,6 @@ def get_utxos(tx, address):
             utxos.append(output)
 
     return utxos
-
-def verbose(content):
-    if verbose_mode: print content
 
 def bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
