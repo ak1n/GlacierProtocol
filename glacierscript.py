@@ -775,14 +775,16 @@ def withdraw_interactive():
         print "\n\n*** PLEASE BE SURE TO ENTER THE CORRECT DESTINATION ADDRESS ***\n"
 
         source_address = raw_input("\nSource cold storage address: ")
+
+        if re_sign_mode is not 1:
+            redeem_script = raw_input("\nRedemption script for source cold storage address: ")
+            dest_address = raw_input("\nDestination address: ")
+            num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
+        else:
+            unsigned_tx, redeem_script, dest_address, change_amount, amount = parse_part_signed_tx()
+
         addresses[source_address] = 0
-
-        redeem_script = raw_input("\nRedemption script for source cold storage address: ")
-
-        dest_address = raw_input("\nDestination address: ")
         addresses[dest_address] = 0
-
-        num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
 
         txs = []
         utxos = []
