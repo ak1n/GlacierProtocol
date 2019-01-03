@@ -357,10 +357,12 @@ def get_raw_tx_interactive(unique_init_prompt):
         raw_tx = open(raw_tx).read().strip()
     return raw_tx
 
-def parse_part_signed_tx():
-    # parses partially-signed transaction
-    # manually receives tx hex (included as fn output)
-    # fn outputs parsed: redeem_script, dest_address, change_amount, amount
+def parse_part_signed_tx(source_address):
+    # parses partially-signed transaction hex for tx data (to later re-sign)
+    # inputs:
+    #   passed: source_address (cold storage address)
+    #   in fn: manually receives tx hex (included as fn output)
+    # fn outputs parsed: redeem_script, dest_address, change_amount, withdrawal_amount, num_tx
     part_signed_tx_hex = get_raw_tx_interactive("For the partially-signed transaction")
 
     part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_tx_hex))
@@ -400,8 +402,8 @@ def parse_part_signed_tx():
         change_amount = Decimal(part_signed_tx["vout"][cold_storage_vout_index]["value"]).quantize(SATOSHI_PLACES)
         withdrawal_amount = Decimal(part_signed_tx["vout"][destination_vout_index]["value"]).quantize(SATOSHI_PLACES)
 
-    print"\nfollowing variables parsed from partially signed hex input:"
-    print "\n    cold storage / source_address: {0}".format(source_address)
+        print"\nfollowing variables parsed from partially signed hex input & storage address:"
+        print "\n    cold storage / source_address: {0} (for reference from manual input)".format(source_address)
     print "\n    redemption script: {0}".format(redeem_script)
     print "\n    destination address: {0}".format(dest_address)
     print "\n    number of input transactions: {0}".format(num_tx)
@@ -413,7 +415,7 @@ def parse_part_signed_tx():
     if not confirm:
         print "auto parsed data from transaction incorrect so aborting"
         sys.exit()
-    return part_signed_tx_hex, redeem_script, dest_address, change_amount, amount
+    return part_signed_tx_hex, redeem_script, dest_address, change_amount, withdrawal_amount, num_tx
 
 def verbose(content):
     if verbose_mode: print content
@@ -793,7 +795,7 @@ def withdraw_interactive():
             dest_address = raw_input("\nDestination address: ")
             num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
         else:
-            unsigned_tx, redeem_script, dest_address, change_amount, amount = parse_part_signed_tx()
+            unsigned_tx, redeem_script, dest_address, change_amount, withdrawal_amount, num_tx  = parse_part_signed_tx(source_address)
 
         addresses[source_address] = 0
         addresses[dest_address] = 0
