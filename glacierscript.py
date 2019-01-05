@@ -34,6 +34,7 @@ import random
 import subprocess
 import json
 from decimal import Decimal
+import getpass
 
 # Taken from Gavin Andresen's "bitcointools" python library (exact link in source file)
 from base58 import b58encode
@@ -842,6 +843,8 @@ def withdraw_interactive():
         keys = []
         while len(keys) < key_count:
             key = raw_input("Key #{0}: ".format(len(keys) + 1))
+            # following line may be useful for some cases, but would need to suppress key also in subsequent output, including in verbose mode if activated
+            #key = getpass.getpass(prompt="Key #{0}: ".format(len(keys) + 1))
             keys.append(key)
 
         ###### fees, amount, and change #######
