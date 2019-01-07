@@ -41,6 +41,7 @@ from base58 import b58encode
 SATOSHI_PLACES = Decimal("0.00000001")
 
 verbose_mode = 0
+re_sign_mode = 0
 
 ################################################################################################
 #
