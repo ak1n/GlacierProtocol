@@ -808,6 +808,10 @@ def withdraw_interactive():
         utxo_sum = Decimal(0).quantize(SATOSHI_PLACES)
 
         while len(input_txs) < num_tx:
+
+            # start block to be replaced by following comment line
+            #   hex_tx = get_raw_tx_interactive("For input transaction #{}".format(len(input_txs) + 1))
+            # not implementing now because will break testing
             print "\nPlease paste raw transaction #{} (hexadecimal format) with unspent outputs at the source address".format(len(input_txs) + 1)
             print "OR"
             print "input a filename located in the current directory which contains the raw transaction data"
@@ -816,6 +820,7 @@ def withdraw_interactive():
             hex_tx = raw_input()
             if os.path.isfile(hex_tx):
                 hex_tx = open(hex_tx).read().strip()
+            # end block to be replaced
 
             tx = json.loads(bitcoin_cli_call("decoderawtransaction", hex_tx))
             input_txs.append(tx)
