@@ -853,7 +853,6 @@ def withdraw_interactive():
         if re_sign_mode is not 1:
             fee = get_fee_interactive(
                 source_address, keys, addresses, redeem_script, input_txs)
-            # Got this far
             check_fee_to_input_amt(fee, input_amount)
             withdrawal_amount, change_amount = withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address)
         else:
