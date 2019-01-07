@@ -492,6 +492,33 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
 
     return fee
 
+def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address):
+    # inputs: input_amount & fee (to get amts) + dest_address, source address (for display)
+    # outputs: withdrawal_amount, change_amount
+    print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
+    print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
+    print "\nAfter a fee of {0}, you have {1} bitcoins available to withdraw.".format(fee, input_amount - fee)
+    print "\n*** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***\n"
+    withdrawal_amount = raw_input(
+        "Amount to send to {0} (leave blank to withdraw all funds stored in these unspent transactions): ".format(dest_address))
+    if withdrawal_amount == "":
+        withdrawal_amount = input_amount - fee
+    else:
+        withdrawal_amount = Decimal(withdrawal_amount).quantize(SATOSHI_PLACES)
+
+    if fee + withdrawal_amount > input_amount:
+        print "Error: fee + withdrawal amount greater than total amount available from unspent transactions"
+        raise Exception("Output values greater than input value")
+
+    change_amount = input_amount - withdrawal_amount - fee
+
+    # less than a satoshi due to weird floating point imprecision
+    if change_amount < 1e-8:
+        change_amount = 0
+
+    if change_amount > 0:
+        print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
+    return withdrawal_amount, change_amount
 
 ################################################################################################
 #
@@ -743,30 +770,7 @@ def withdraw_interactive():
             source_address, keys, addresses, redeem_script, txs)
         # Got this far
         check_fee_to_input_amt(fee, input_amount)
-
-        print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
-        print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
-        print "\nAfter a fee of {0}, you have {1} bitcoins available to withdraw.".format(fee, input_amount - fee)
-        print "\n*** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***\n"
-        withdrawal_amount = raw_input(
-            "Amount to send to {0} (leave blank to withdraw all funds stored in these unspent transactions): ".format(dest_address))
-        if withdrawal_amount == "":
-            withdrawal_amount = input_amount - fee
-        else:
-            withdrawal_amount = Decimal(withdrawal_amount).quantize(SATOSHI_PLACES)
-
-        if fee + withdrawal_amount > input_amount:
-            print "Error: fee + withdrawal amount greater than total amount available from unspent transactions"
-            raise Exception("Output values greater than input value")
-
-        change_amount = input_amount - withdrawal_amount - fee
-
-        # less than a satoshi due to weird floating point imprecision
-        if change_amount < 1e-8:
-            change_amount = 0
-
-        if change_amount > 0:
-            print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
+        withdrawal_amount, change_amount = withdrawal_amounts_interactive(input_amount, fee, dest_address, source_address)
 
         addresses[dest_address] = str(withdrawal_amount)
         addresses[source_address] = str(change_amount)
