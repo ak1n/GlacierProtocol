@@ -340,6 +340,22 @@ def get_utxos(tx, address):
 
     return utxos
 
+def get_raw_tx_interactive(unique_init_prompt):
+    # handle inputting of raw tx hex. display initial prompt specific to the input
+    # will be called from fns:
+    #   parse_part_signed_tx (for re-sign of partially-signed tx)
+    #   withdraw_interactive (for input tx; pending testing revision to not break make)
+    print "\n{0}".format(unique_init_prompt)
+    print "\n  Please paste the raw transaction (hexadecimal format) with unspent outputs at the source address"
+    print "  OR"
+    print "  input a filename located in the current directory which contains the raw transaction data"
+    print "  (If the transaction data is over ~4000 characters long, you _must_ use a file.):"
+
+    raw_tx = raw_input()
+    if os.path.isfile(raw_tx):
+        raw_tx = open(raw_tx).read().strip()
+    return raw_tx
+
 def check_fee_to_input_amt(fee, input_amount):
     # check that a fee set for a transaction does not exceed available input transactions
     # will be called from withdrawal interactive in both full & sequential sign modes (but at different points)
