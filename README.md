@@ -4,7 +4,7 @@ Glacier is a protocol for secure cold storage of bitcoins.
 
 * this is a fork of Glacier by ak1n
 * modifications in this fork need further auditing and testing
-* protocol documentation to go along with software modifications not yet completed
+* protocol documentation to go along with proposed protocol modifications not yet completed
 
 ## ak1n modifications
 * source repository: https://github.com/GlacierProtocol/GlacierProtocol
@@ -14,18 +14,23 @@ Glacier is a protocol for secure cold storage of bitcoins.
 * done pending review
   * **bitcoin-cli-fn-take2** consolidation of bitcoin cli calls - allows easier debugging w subsequent mods
   * **verbose-mode**: `-v` argument. output includes bitcoin-cli calls. useful in debugging
+  * **sequential-signing**
+    * add support for sequential-signing/re-signing: provide another signature to partially-signed transaction
+    * invoke feature within modified withdrawal function via CLI `sign-transaction` argument toggle
+    * make testing files added
+    * needs upgrade of fee transaction estimation to work best
+* in-progress:
+  * fee estimation upgrade - main version assumes full keys given & when they're not fee estimates change. being worked on now
 * under revision
-  * centralized processing of BTC display w mBTC if useful
+  * centralized processing of BTC display w mBTC
   * permit single confirm for safety checklist
     * remove repeated confirmations for safety checklist w e.g. global toggle
   * increment qr filename to allow multiple transactions offline
-  * sequential-signing
-    * add support for sequential-signing/re-signing: provide another signature to partially-signed transaction
-    * invoke feature within modified withdrawal function via CLI `sign-transaction` argument toggle
-    
+
 ### features / branches for fork
 * under revision:
   * tailsOS supprt: superior to Ubuntu for glacier storage (be there paper or digital wallets)
+    * tails should be under ongoing greater security/privacy scrutiny vs. e.g. ubuntu
   * veracrypt support: for digital, rather than paper, storage of keys
   * setup function
     * invocation arguments: `setup -t` (latter for tails in event setup applied to other distros)
@@ -45,12 +50,13 @@ Glacier is a protocol for secure cold storage of bitcoins.
       * note that do NOT need to install for opening veracrypt volumes
     * open & close veracrypt volume functions
 
-### protocol deviations
+### protocol deviations (for eventual full-fork)
 * keys on digital storage media
   * e.g. keepassx database within a veracrypt volume
 * transaction signing: sequentially at distinct physical locations
 * bitcoin acquired directly rather than via ubuntu PPA
   * https://bitcoin.org/bin/bitcoin-core-0.17.1/bitcoin-0.17.1-x86_64-linux-gnu.tar.gz
+  * rationale: why introduce intermediary? reduce complexity
 * Tails OS over ubuntu - deb packages needed:
   * deb packages:`zbar-tools qrencode gnome-tweak-tool`
     * note: I include gnome-tweak-tool because the default trackpad settings drive me insane (I recommend tweak: Default -> Fingers)
@@ -73,6 +79,12 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * expansion of digital attack surface by storing keys digitally
 
 ### testing performed
+
+#### make
+* all new pushes pass make test
+
+#### run-through w live btc
+* most pushes should have had live btc testing
 
 #### initial draft (old - code now under revision)
 * note: testing performed for related functions of each main branch, then for merged master branch
