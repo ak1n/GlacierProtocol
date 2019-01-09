@@ -1,0 +1,70 @@
+
+
+Sequential signing of transactions supports ONLY Segwit wallets/transactions. This will not work with non-segwit wallets/transactions. Proceeding with non-segwit wallets/transactions RISKS LOSS OF FUNDS. Please confirm using segwit to proceed.
+Confirm? (y/n): Are you running this on a computer WITHOUT a network connection of any kind? (y/n)?Have the wireless cards in this computer been physically removed? (y/n)?Are you running on battery power? (y/n)?Are you running on an operating system booted from a USB drive? (y/n)?Is your screen hidden from view of windows, cameras, and other people? (y/n)?Are smartphones and all other nearby devices turned off and in a Faraday bag? (y/n)?
+You will need to enter several pieces of information to create a withdrawal transaction.
+
+
+*** PLEASE BE SURE TO ENTER THE CORRECT DESTINATION ADDRESS ***
+
+
+Source cold storage address: 
+For the partially-signed transaction
+
+  Please paste the raw transaction (hexadecimal format) with unspent outputs at the source address
+  OR
+  input a filename located in the current directory which contains the raw transaction data
+  (If the transaction data is over ~4000 characters long, you _must_ use a file.):
+
+following variables parsed from partially signed hex input & storage address:
+
+    cold storage / source_address: 2MvQKEWTdtH7uM5C72quuMukWNFkFYjm34N (for reference from manual input)
+
+    redemption script: 5221035a0cf2b8ad46945154d80b339f730ac0cdbc39a95550a95821adf6df6e6e3c9421038f339e9149fda8496360d689b5d6b4d66f8e64e28b1c89846efd0831512eab882103442945263f31819baf5799dc9595eba49b8f6674dadf21189f717abd630ab15053ae
+
+    destination address: mxBQD1QAYpwiudaCJdRhE9QSW9cokafJ99
+
+    number of input transactions: 1
+
+    change amount: 0.04998020
+
+    withdrawal amount: 0.15000000
+
+
+please confirm whether above data is correct before proceeding to input additional data for transaction re-sign
+Confirm? (y/n): 
+Please paste raw transaction #1 (hexadecimal format) with unspent outputs at the source address
+OR
+input a filename located in the current directory which contains the raw transaction data
+(If the transaction data is over ~4000 characters long, you _must_ use a file.):
+
+Transaction data found for source address.
+TOTAL unspent amount for this raw transaction: 0.20000000 BTC
+
+How many private keys will you be signing this transaction with? 
+#: Key #1: 
+Is this data correct?
+*** WARNING: Incorrect data may lead to loss of funds ***
+
+0.20000000 BTC in unspent supplied transactions
+0.04998020 BTC going back to cold storage address 2MvQKEWTdtH7uM5C72quuMukWNFkFYjm34N
+0.15000000 BTC going to destination address mxBQD1QAYpwiudaCJdRhE9QSW9cokafJ99
+Fee amount: 0.00001980
+
+Signing with private keys: 
+cPSsBu9SyNVAS2Evy3m4ELFx7KGnudH3N77Es83nafa2xVWJGRSe
+
+
+Confirm? (y/n): 
+Calculating transaction...
+
+
+Sufficient private keys to execute transaction?
+True
+
+Raw signed transaction (hex):
+0200000000010154f3a5ba6a5a2beb6975c59895ad36fe84aa622edbaa662dadbd6e2a7a8a84670300000023220020d017965b0cae52a8b6f6e43b00118be27dae84b825959dcb77ca6b5310e53ea3ffffffff0284434c000000000017a91422a07fe0ea8b8293eb336b9423f7e3958917924387c0e1e400000000001976a914b6c7733e23a271e57ca16e5cd885174917968db988ac0400473044022053b2e6518e0846b5ff98b7f768a57484325c1f98e10b746f078a6f7a470a48280220172da2742182929bc9bd80eaeea8466c34984182fb59206da6326cb05f760abc01473044022078d174579919bc4fa7adb6813b5087a4bacd06014eb68a05232d728ec1ee3367022023583608c8f1a246cb61af5059d39cb66c4303e51ddff8789eb1fe4344788fc501695221035a0cf2b8ad46945154d80b339f730ac0cdbc39a95550a95821adf6df6e6e3c9421038f339e9149fda8496360d689b5d6b4d66f8e64e28b1c89846efd0831512eab882103442945263f31819baf5799dc9595eba49b8f6674dadf21189f717abd630ab15053ae00000000
+
+Transaction fingerprint (md5):
+0b11452b57a52e9c0e617a89d9d3984b
+QR code for transaction written to transaction.png

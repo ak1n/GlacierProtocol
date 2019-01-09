@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+../../glacierscript.py --testnet=$1 sign-transaction << INPUT
+y
+y
+y
+y
+y
+y
+y
+2MvQKEWTdtH7uM5C72quuMukWNFkFYjm34N
+0200000000010154f3a5ba6a5a2beb6975c59895ad36fe84aa622edbaa662dadbd6e2a7a8a84670300000023220020d017965b0cae52a8b6f6e43b00118be27dae84b825959dcb77ca6b5310e53ea3ffffffff0284434c000000000017a91422a07fe0ea8b8293eb336b9423f7e3958917924387c0e1e400000000001976a914b6c7733e23a271e57ca16e5cd885174917968db988ac0400473044022078d174579919bc4fa7adb6813b5087a4bacd06014eb68a05232d728ec1ee3367022023583608c8f1a246cb61af5059d39cb66c4303e51ddff8789eb1fe4344788fc50100695221035a0cf2b8ad46945154d80b339f730ac0cdbc39a95550a95821adf6df6e6e3c9421038f339e9149fda8496360d689b5d6b4d66f8e64e28b1c89846efd0831512eab882103442945263f31819baf5799dc9595eba49b8f6674dadf21189f717abd630ab15053ae00000000
+y
+02000000015701865854493f0cb97b07ccf231003150433c74abc8cdac4c3c87fb25bbe9e0000000006a473044022003061e39e0eafff6120261e1930da298d14d46e594de1cf260cb7ef18446d3d3022010ff3990751a8e9cb90698223ca67607706a6d670ad9d1f63b55b560c73ab65a012102d69841fccc853bc99a1a32514d53d950528bd0eae03f45107cc10ce1ed4845acfeffffff05002d31010000000017a914fdd200f6e02076173292642fd352dc45f849070e8790409700000000001976a91414f909762e0f653521433c3d853d1f90dad17ee188ac002d31010000000017a91497c2ffdcdfc233a328751b46a47b781b1eec9b2d87002d31010000000017a91422a07fe0ea8b8293eb336b9423f7e3958917924387002d31010000000017a9142524a7e29329a636bf4c1d8dea0dc6a087e5d91687bd911300
+1
+cPSsBu9SyNVAS2Evy3m4ELFx7KGnudH3N77Es83nafa2xVWJGRSe
+y
+INPUT
+
+# continuation of test create-withdrawal-data.partial-sign.w-change.2-of-3.run
+# input data
+#   extra "y" at beginning for confirming user aware only segwit support
+#   then safety check "y"s as in create-withdrawal tests (6 "y")
+#   cold storage address
+#   partially signed tx hex = final output of create-withdrawal-data.2-of-3-segwit-partial-sign.golden
+#   "y" to confirm data parsed from partially-signed tx hex
+#   tx raw hex
+#   1 = num keys to (re) sign with
+#   key to sign with (2nd key from full/non-partial test)
+#   "y" confirm re-sign setup
+# output
+#   should get "True" for sufficient private keys to execute
+#   other data should match that in create-withdrawal
