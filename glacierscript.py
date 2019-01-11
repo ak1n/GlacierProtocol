@@ -580,7 +580,20 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
                                      redeem_script, unsigned_tx, input_txs)
 
         decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction", signed_tx["hex"]))
-        size = decoded_tx["vsize"]
+        
+        # estimate tx size - depends on whether have all required sigs now
+        if not signed_tx["complete"]:
+            verbose("transaction incomplete so revising fee estimate to account for missing keys")
+            # get total number of keys signing up to & including this point
+            num_cur_sigs = num_cur_signatures_from_witness(decoded_tx["vin"][0]["txinwitness"])
+            # get total number of keys required (m in the m-of-n)
+            num_req_sigs = num_required_keys_from_redeem(redeem_script)
+            
+            size = revise_vsize_if_missing_keys(decoded_tx["vsize"], decoded_tx["size"], num_cur_sigs, num_req_sigs)
+        else:
+            verbose("transaction complete: have enough keys to fully-sign transaction")
+            size = decoded_tx["vsize"]
+        # end estimate tx size block
 
         fee = size * fee_basis_satoshis_per_byte
         fee = satoshi_to_btc(fee)
