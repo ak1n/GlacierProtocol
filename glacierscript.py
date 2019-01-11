@@ -517,6 +517,20 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     signed_tx = json.loads(signed_hex)
     return signed_tx
 
+def num_cur_signatures_from_witness(decoded_tx_witness):
+    # assumptions re *decoded* witness data:
+    #   first element blank
+    #   next elements: signatures (if signed) or blank (if unsigned)
+    #   last element redeem_script
+    # so to get current number of sigs iterate through elements and see if blank, ignoring 1st & last
+    num_sigs = 0
+    for i in range(1, (len(decoded_tx_witness) - 1)):
+        if not decoded_tx_witness[i]:
+            verbose("\nsignature place #{} is blank (unsigned)".format(i))
+        else:
+            verbose("\nsignature place #{0}: {1}".format(i,decoded_tx_witness[i]))
+            num_sigs+=1
+    return num_sigs
 
 def get_fee_interactive(source_address, keys, destinations, redeem_script, input_txs):
     """
