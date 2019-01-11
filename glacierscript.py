@@ -517,6 +517,10 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     signed_tx = json.loads(signed_hex)
     return signed_tx
 
+def num_required_keys_from_redeem(redeem_script):
+    decoded_redeem_script = json.loads(bitcoin_cli_call("decodescript",redeem_script))
+    return decoded_redeem_script["reqSigs"]
+
 def num_cur_signatures_from_witness(decoded_tx_witness):
     # assumptions re *decoded* witness data:
     #   first element blank
