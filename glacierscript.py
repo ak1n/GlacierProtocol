@@ -535,6 +535,18 @@ def num_cur_signatures_from_witness(decoded_tx_witness):
             verbose("\nsignature place #{0}: {1}".format(i,decoded_tx_witness[i]))
             num_sigs+=1
     return num_sigs
+    
+def revise_vsize_if_missing_keys(vsize, size, num_cur_sigs, num_req_sigs):
+    remaining_keys = int(num_req_sigs) - int(num_cur_sigs)
+    # key size: 73 bytes (142 hex chars; 72 bytes but then add 1 for opcode)
+    key_added_size = 73
+    stripped_size = ( (vsize * 4) - size ) / 3
+    final_size = size + (remaining_keys * key_added_size)
+    final_vsize = ((3 * stripped_size) + final_size) / 4
+
+    verbose("\nrevise fee vars:\n  num_cur_sigs: {0}\n  num_req_sigs: {1}\n  calc'd remaining_keys: {2}\n  vsize: {3}\n  size: {4}\n  stripped_size: {5}\n  const key size: {6}\n  final_size: {7}\n  final (revised) vsize: {8}".format(num_cur_sigs, num_req_sigs, remaining_keys, vsize, size, stripped_size, key_added_size, final_size, final_vsize))
+
+    return final_vsize
 
 def get_fee_interactive(source_address, keys, destinations, redeem_script, input_txs):
     """
