@@ -19,8 +19,7 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * invoke feature within modified withdrawal function via CLI `sign-transaction` argument toggle
     * make testing files added
     * needs upgrade of fee transaction estimation to work best
-* in-progress:
-  * fee estimation upgrade - main version assumes full keys given & when they're not fee estimates change. being worked on now
+  * **fix-fees**: adjust fee estimate in sequential signing to account for eventual complete-key (m keys) signage
 * under revision
   * centralized processing of BTC display w mBTC
   * permit single confirm for safety checklist
@@ -49,6 +48,7 @@ Glacier is a protocol for secure cold storage of bitcoins.
       * gui install as above - ***required for volume creation only***
       * note that do NOT need to install for opening veracrypt volumes
     * open & close veracrypt volume functions
+* once above complete: formal auditing
 
 ### protocol deviations (for eventual full-fork)
 * keys on digital storage media
