@@ -437,8 +437,8 @@ def btc_display(btc):
     expanded_display_str = ""
     if btc < 1:
         expanded_display_str = " ({} mbtc".format((btc*1000).quantize(SATOSHI_MBTC_PLACES))
-        if btc < 0.001:
-            expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
+        #if btc < 0.001:
+        #    expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
         expanded_display_str += ")"
     return "{0} btc{1}".format(btc,expanded_display_str)
 
