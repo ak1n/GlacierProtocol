@@ -39,6 +39,8 @@ from decimal import Decimal
 from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
+SATOSHI_MBTC_PLACES = Decimal("0.00001")
+SATOSHI_MICROBTC_PLACES = Decimal("0.01")
 
 verbose_mode = 0
 re_sign_mode = 0
@@ -422,6 +424,23 @@ def check_fee_to_input_amt(fee, input_amount):
     if fee > input_amount:
         print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
         sys.exit()
+
+def btc_display(btc):
+    # streamline display of btc, including mbtc if < 1 btc & microbtc if < 1 mbtc
+    #   reduce user errors (e.g. w counting decimals in fee checking)
+    # note: calls SHOULD break existing testing as changing display output
+    # call points will include:
+    #   get_fee_interactive: multiple calls ("bitcoins")
+    #   withdraw_interactive: multiple calls ("BTC", "bitcoins")
+    # commit sequence: add function & new globals, call-commits, update testing
+    btc = Decimal(btc).quantize(SATOSHI_PLACES)
+    expanded_display_str = ""
+    if btc < 1:
+        expanded_display_str = " ({} mbtc".format((btc*1000).quantize(SATOSHI_MBTC_PLACES))
+        if btc < 0.001:
+            expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
+        expanded_display_str += ")"
+    return "{0} btc{1}".format(btc,expanded_display_str)
 
 def bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
