@@ -618,9 +618,9 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         fee = satoshi_to_btc(fee)
 
         if fee > MAX_FEE:
-            print "Calculated fee ({}) is too high. Must be under {}".format(fee, MAX_FEE)
+            print "Calculated fee ({}) is too high. Must be under {}.".format(btc_display(fee), btc_display(MAX_FEE))
         else:
-            print "\nBased on the provided rate, the fee will be {} bitcoin.".format(fee)
+            print "\nBased on the provided rate, the fee will be {}.".format(btc_display(fee))
             confirm = yes_no_interactive()
 
             if confirm:
@@ -635,7 +635,7 @@ def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_addre
     # outputs: withdrawal_amount, change_amount
     print "\nPlease enter the decimal amount (in bitcoin) to withdraw to the destination address."
     print "\nExample: For 2.3 bitcoins, enter \"2.3\"."
-    print "\nAfter a fee of {0}, you have {1} bitcoins available to withdraw.".format(fee, input_amount - fee)
+    print "\nAfter a fee of {0}, you have {1} available to withdraw.".format(btc_display(fee), btc_display(input_amount - fee))
     print "\n*** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***\n"
     withdrawal_amount = raw_input(
         "Amount to send to {0} (leave blank to withdraw all funds stored in these unspent transactions): ".format(dest_address))
@@ -655,7 +655,7 @@ def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_addre
         change_amount = 0
 
     if change_amount > 0:
-        print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
+        print "{0} being returned to cold storage address address {1}.".format(btc_display(change_amount), source_address)
     return withdrawal_amount, change_amount
 
 ################################################################################################
@@ -898,7 +898,7 @@ def withdraw_interactive():
                 value = Decimal(utxo["value"]).quantize(SATOSHI_PLACES)
                 utxo_sum += value
 
-            print "TOTAL unspent amount for this raw transaction: {} BTC".format(utxo_sum)
+            print "TOTAL unspent amount for this raw transaction: {}".format(btc_display(utxo_sum))
 
         print "\nHow many private keys will you be signing this transaction with? "
         key_count = int(raw_input("#: "))
@@ -928,13 +928,13 @@ def withdraw_interactive():
         print "\nIs this data correct?"
         print "*** WARNING: Incorrect data may lead to loss of funds ***\n"
 
-        print "{0} BTC in unspent supplied transactions".format(input_amount)
+        print "{} in unspent supplied transactions".format(btc_display(input_amount))
         for address, value in addresses.iteritems():
             if address == source_address:
-                print "{0} BTC going back to cold storage address {1}".format(value, address)
+                print "{0} going back to cold storage address {1}".format(btc_display(value), address)
             else:
-                print "{0} BTC going to destination address {1}".format(value, address)
-        print "Fee amount: {0}".format(fee)
+                print "{0} going to destination address {1}".format(btc_display(value), address)
+        print "Fee amount: {0}".format(btc_display(fee))
         print "\nSigning with private keys: "
         for key in keys:
             print "{}".format(key)
