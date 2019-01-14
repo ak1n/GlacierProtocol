@@ -11,15 +11,15 @@ Glacier is a protocol for secure cold storage of bitcoins.
 * ak1n modification fork: https://github.com/ak1n/GlacierProtocol
 
 ### features / branches for proposed integration w mainline glacier
-* done pending review
-  * **bitcoin-cli-fn-take2** consolidation of bitcoin cli calls - allows easier debugging w subsequent mods
-  * **verbose-mode**: `-v` argument. output includes bitcoin-cli calls. useful in debugging
-  * **sequential-signing**
+* done pending review:
+  1. **bitcoin-cli-fn-take2** consolidation of bitcoin cli calls - allows easier debugging w subsequent mods
+  2. **verbose-mode**: `-v` argument. output includes bitcoin-cli calls. useful in debugging
+  3. **sequential-signing**
     * add support for sequential-signing/re-signing: provide another signature to partially-signed transaction
     * invoke feature within modified withdrawal function via CLI `sign-transaction` argument toggle
     * make testing files added
     * needs upgrade of fee transaction estimation to work best
-  * **fix-fees**: adjust fee estimate in sequential signing to account for eventual complete-key (m keys) signage
+  4. **fix-fees**: adjust fee estimate in sequential signing to account for eventual complete-key (m keys) signage
 * under revision
   * centralized processing of BTC display w mBTC
   * permit single confirm for safety checklist
