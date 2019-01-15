@@ -627,9 +627,9 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         fee = satoshi_to_btc(fee)
 
         if fee > MAX_FEE:
-            print "Calculated fee ({}) is too high. Must be under {}".format(fee, MAX_FEE)
+            print "Calculated fee ({}) is too high. Must be under {}.".format(btc_display(fee), btc_display(MAX_FEE))
         else:
-            print "\nBased on the provided rate, the fee will be {} bitcoin.".format(fee)
+            print "\nBased on the provided rate, the fee will be {}.".format(btc_display(fee))
             confirm = yes_no_interactive()
 
             if confirm:
