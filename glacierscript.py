@@ -904,7 +904,7 @@ def withdraw_interactive():
                 value = Decimal(utxo["value"]).quantize(SATOSHI_PLACES)
                 utxo_sum += value
 
-            print "TOTAL unspent amount for this raw transaction: {} BTC".format(utxo_sum)
+            print "TOTAL unspent amount for this raw transaction: {}".format(btc_display(utxo_sum))
 
         print "\nHow many private keys will you be signing this transaction with? "
         key_count = int(raw_input("#: "))
@@ -934,13 +934,13 @@ def withdraw_interactive():
         print "\nIs this data correct?"
         print "*** WARNING: Incorrect data may lead to loss of funds ***\n"
 
-        print "{0} BTC in unspent supplied transactions".format(input_amount)
+        print "{} in unspent supplied transactions".format(btc_display(input_amount))
         for address, value in addresses.iteritems():
             if address == source_address:
-                print "{0} BTC going back to cold storage address {1}".format(value, address)
+                print "{0} going back to cold storage address {1}".format(btc_display(value), address)
             else:
-                print "{0} BTC going to destination address {1}".format(value, address)
-        print "Fee amount: {0}".format(fee)
+                print "{0} going to destination address {1}".format(btc_display(value), address)
+        print "Fee amount: {0}".format(btc_display(fee))
         print "\nSigning with private keys: "
         for key in keys:
             print "{}".format(key)
