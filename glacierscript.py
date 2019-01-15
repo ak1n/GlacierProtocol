@@ -44,6 +44,7 @@ SATOSHI_MICROBTC_PLACES = Decimal("0.01")
 
 verbose_mode = 0
 re_sign_mode = 0
+single_safety_confirm_mode = 0
 
 ################################################################################################
 #
