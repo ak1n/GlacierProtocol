@@ -679,16 +679,28 @@ def write_and_verify_qr_code(name, filename, data):
     data: <string> the data to be encoded
     """
 
-    subprocess.call("qrencode -o {0} {1}".format(filename, data), shell=True)
+    QR_SUFFIX = ".png"
+    script_root = os.path.dirname(os.path.abspath(__file__))
+    qr_increment = ""
+
+    i = 2
+    while(True):
+        qr_path = script_root + "/" + filename + qr_increment + QR_SUFFIX
+        if not os.path.exists(qr_path): break
+        verbose("\nQR exists at: {}, thus incrementing file suffix".format(qr_path))
+        qr_increment = str(i)
+        i += 1
+
+    subprocess.call("qrencode -o {0} {1}".format(qr_path, data), shell=True)
     check = subprocess.check_output(
-        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(filename), shell=True)
+        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(qr_path), shell=True)
 
     if check.strip() != data:
         print "********************************************************************"
         print "WARNING: {} QR code could not be verified properly. This could be a sign of a security breach.".format(name)
         print "********************************************************************"
 
-    print "QR code for {0} written to {1}".format(name, filename)
+    print "QR code for {0} written to {1}".format(name, filename + qr_increment + QR_SUFFIX)
 
 
 ################################################################################################
