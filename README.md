@@ -21,12 +21,13 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * needs upgrade of fee transaction estimation to work best
   4. **fix-fees**: adjust fee estimate in sequential signing to account for eventual complete-key (m keys) signage
   5. **btc-display-consolidate**: centralized processing of BTC display w mBTC
+  6. **qr-increment**: increment qr filename to allow multiple transactions offline
+    * modify qr function to increment, alter calls to exclude suffix, and in makefile remove PNGs w tests to pass make
     * this is currently the most uptodate version integrating successive changes
 * under revision
   * permit single confirm for safety checklist
     * remove repeated confirmations for safety checklist w e.g. global toggle
-  * increment qr filename to allow multiple transactions offline
-
+    
 ### features / branches for fork
 * under revision:
   * tailsOS supprt: superior to Ubuntu for glacier storage (be there paper or digital wallets)
