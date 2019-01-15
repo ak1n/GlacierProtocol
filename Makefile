@@ -68,7 +68,7 @@ RUNDIR = testrun/$(notdir $@)
 	$(cleanup_bitcoind)
 	@rm -rf $(RUNDIR)
 	@rm $(OUTPUT)
-
+	@rm -f *.png
 
 prereqs:
 	@which bitcoind > /dev/null || (echo 'Error: unable to find bitcoind'; exit 1)

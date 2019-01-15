@@ -672,23 +672,35 @@ def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_addre
 
 def write_and_verify_qr_code(name, filename, data):
     """
-    Write a QR code and then read it back to try and detect any tricksy malware tampering with it.
+    Write a QR code and then read it back to tr y and detect any tricksy malware tampering with it.
 
     name: <string> short description of the data
     filename: <string> filename for storing the QR code
     data: <string> the data to be encoded
     """
-
-    subprocess.call("qrencode -o {0} {1}".format(filename, data), shell=True)
+    
+    QR_SUFFIX = ".png"
+    script_root = os.path.dirname(os.path.abspath(__file__))
+    qr_increment = ""
+    
+    i = 2
+    while(True):
+        qr_path = script_root + "/" + filename + qr_increment + QR_SUFFIX
+        if not os.path.exists(qr_path): break
+        verbose("\nQR exists at: {}, thus incrementing file suffix".format(qr_path))
+        qr_increment = str(i)
+        i += 1
+                
+    subprocess.call("qrencode -o {0} {1}".format(qr_path, data), shell=True)
     check = subprocess.check_output(
-        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(filename), shell=True)
+        "zbarimg --set '*.enable=0' --set 'qr.enable=1' --quiet --raw {}".format(qr_path), shell=True)
 
     if check.strip() != data:
         print "********************************************************************"
         print "WARNING: {} QR code could not be verified properly. This could be a sign of a security breach.".format(name)
         print "********************************************************************"
 
-    print "QR code for {0} written to {1}".format(name, filename)
+    print "QR code for {0} written to {1}".format(name, filename + qr_increment + QR_SUFFIX)
 
 
 ################################################################################################
@@ -831,8 +843,8 @@ def deposit_interactive(m, n, dice_seed_length=62, rng_seed_length=20):
     print "{}".format(results["redeemScript"])
     print ""
 
-    write_and_verify_qr_code("cold storage address", "address.png", results["address"])
-    write_and_verify_qr_code("redemption script", "redemption.png",
+    write_and_verify_qr_code("cold storage address", "address", results["address"])
+    write_and_verify_qr_code("redemption script", "redemption",
                        results["redeemScript"])
 
 
@@ -972,7 +984,7 @@ def withdraw_interactive():
     print "\nTransaction fingerprint (md5):"
     print hash_md5(signed_tx["hex"])
 
-    write_and_verify_qr_code("transaction", "transaction.png", signed_tx["hex"])
+    write_and_verify_qr_code("transaction", "transaction", signed_tx["hex"])
 
 
 ################################################################################################
