@@ -68,6 +68,7 @@ RUNDIR = testrun/$(notdir $@)
 	$(cleanup_bitcoind)
 	@rm -rf $(RUNDIR)
 	@rm $(OUTPUT)
+	@rm -f *.png
 
 
 prereqs:
