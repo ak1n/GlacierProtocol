@@ -10,8 +10,10 @@ Glacier is a protocol for secure cold storage of bitcoins.
 * source repository: https://github.com/GlacierProtocol/GlacierProtocol
 * ak1n modification fork: https://github.com/ak1n/GlacierProtocol
 
+* this master branch should contain the "done pending review" mainline glacier items below
+
 ### features / branches for proposed integration w mainline glacier
-* done pending review:
+* complete:
   1. **bitcoin-cli-fn-take2** consolidation of bitcoin cli calls - allows easier debugging w subsequent mods
   2. **verbose-mode**: `-v` argument. output includes bitcoin-cli calls. useful in debugging
   3. **sequential-signing**
@@ -23,15 +25,11 @@ Glacier is a protocol for secure cold storage of bitcoins.
   5. **btc-display-consolidate**: centralized processing of BTC display w mBTC
   6. **qr-increment**: increment qr filename to allow multiple transactions offline
     * modify qr function to increment, alter calls to exclude suffix, and in makefile remove PNGs w tests to pass make
-    * this is currently the most uptodate version integrating successive changes
-* under revision
-  * permit single confirm for safety checklist
-    * remove repeated confirmations for safety checklist w e.g. global toggle
+  7. **single-safety-confirm**: `-s` flag toggles one safety checklist confirmation input (useful for testing on mainnet)
     
 ### features / branches for fork
 * under revision:
-  * tailsOS supprt: superior to Ubuntu for glacier storage (be there paper or digital wallets)
-    * tails should be under ongoing greater security/privacy scrutiny vs. e.g. ubuntu
+  * tailsOS supprt
   * veracrypt support: for digital, rather than paper, storage of keys
   * setup function
     * invocation arguments: `setup -t` (latter for tails in event setup applied to other distros)
@@ -73,7 +71,9 @@ Glacier is a protocol for secure cold storage of bitcoins.
   * reduce physical location attack vector
     * don't co-localize keys for withdrawal - use sequential sign
     * don't use media that store keys in plaintext (paper) - use encrypted volumes
-  * use more secure OS (Ubuntu is not equivalent even offline)
+  * use more secure Tails OS (Ubuntu is not equivalent even offline)
+    * superior to Ubuntu regardless whether online/offline or paper/digital wallets
+    * tails under ongoing greater security/privacy scrutiny vs. e.g. Ubuntu
   * acknowledge theoretical cons:
     * potential key loss through:
       * forgetting/losing passwords for key containers/media
@@ -81,10 +81,12 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * expansion of digital attack surface by storing keys digitally
 
 ### testing stages outline
-
 * make testing
 * main-network btc transfer testing
-* formal auditing of both code & modified protocol - likely multiple phases
+* formal auditing
+  * code
+  * protocol / opsec
+  * likely multiple phases/revisions
 
 ## ak1n public pgp / gpg key
 ```
