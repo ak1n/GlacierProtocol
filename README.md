@@ -80,45 +80,11 @@ Glacier is a protocol for secure cold storage of bitcoins.
       * damage specific to digital media (e.g. EMP)
     * expansion of digital attack surface by storing keys digitally
 
-### testing performed
+### testing stages outline
 
-#### make
-* all new pushes pass make test
-
-#### run-through w live btc
-* most pushes should have had live btc testing
-
-#### initial draft (old - code now under revision)
-* note: testing performed for related functions of each main branch, then for merged master branch
-* boot from tails USB - enable adminstrator password on boot
-* insert app USB
-* 1st boot: online
-  * download deb packages, bitcoin, and veracrypt & load into apps folder as per above
-  * reboot
-* subsequent boots: offline
-* run glacier setup script for tails: `./glacierscript.py setup -t --veracrypt`
-  * click through verascript installer GUI
-  * omit `--veracrypt` if previously created volume
-* change UI settings if needed (for me settings -> disable tap to click, disable "natural" scrolling. tweak settings as above)
-* veracrypt testing:
-  * create veracrypt volume using gui (having run installer for related boot w `--veracrypt`)
-  * veracrypt-open & veracrypt-close arguments
-* create fake dice entropy
-* create computer entropy: `./glacierscript.py entropy --num-keys 4`
-* create cold storage address with entropy (used 2 of 4 setup)
-  * for testing store wallet info in either veracrypt volume or text file
-* use zbarcam to transfer cold storage address via qr
-* fund cold storage wallet address (e.g. electrum w fee selection using https://bitcoinfees.21.co/api/v1/fees/recommended)
-* get hex of funding transaction (via https://blockchain.info/tx/transaction_id_here?format=hex)
-* transfer from online to offline machine via qr:
-  * tx hex
-  * btc addresses to receive coins back to
-* perform withdrawal using re-sign for partial and then total total balance - for each:
-  * create withdrawal transaction and sign with only 1 key: `./glacierscript.py create-withdrawal-data`
-  * re-sign transaction w `sign-transaction`, providing additional key to complete signing
-  * transfer signed tx hex to online computer via qr
-  * verify then broadcast tx via https://coinb.in/#verify
-* note that in between withdrawals need to re-acquire funding tx hex that has been partially depleted so glacier script can work with updated balance amounts (otherwise transferring more than have or attempt to txfer non-existent balance)
+* make testing
+* main-network btc transfer testing
+* formal auditing of both code & modified protocol - likely multiple phases
 
 ## ak1n public pgp / gpg key
 ```
