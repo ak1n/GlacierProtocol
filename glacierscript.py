@@ -423,6 +423,14 @@ def check_fee_to_input_amt(fee, input_amount):
         print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
         sys.exit()
 
+def zero_less_than_satoshi(btc):
+    # less than a satoshi due to weird floating point imprecision
+    # this originally applied only to change amount, but display problems can also happen with 0 Decimals
+    #   if attempt to display 0 with Decimal to satoshi will get 0E-8 (noted on consolidating btc display)
+    if btc < 1e-8:
+        btc = 0
+    return btc
+
 def bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
@@ -630,10 +638,7 @@ def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_addre
         raise Exception("Output values greater than input value")
 
     change_amount = input_amount - withdrawal_amount - fee
-
-    # less than a satoshi due to weird floating point imprecision
-    if change_amount < 1e-8:
-        change_amount = 0
+    change_amount = zero_less_than_satoshi(change_amount)
 
     if change_amount > 0:
         print "{0} being returned to cold storage address address {1}.".format(change_amount, source_address)
