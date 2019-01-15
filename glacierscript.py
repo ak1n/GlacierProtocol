@@ -39,6 +39,8 @@ from decimal import Decimal
 from base58 import b58encode
 
 SATOSHI_PLACES = Decimal("0.00000001")
+SATOSHI_MBTC_PLACES = Decimal("0.00001")
+SATOSHI_MICROBTC_PLACES = Decimal("0.01")
 
 verbose_mode = 0
 re_sign_mode = 0
@@ -430,6 +432,24 @@ def zero_less_than_satoshi(btc):
     if btc < 1e-8:
         btc = 0
     return btc
+
+def btc_display(btc):
+    # streamline display of btc including mbtc if < 1 btc (& in comments microbtc if < 1 mbtc)
+    #   reduce user errors (e.g. w counting decimals in fee checking)
+    # note: calls SHOULD initially break existing testing as changing display output
+    # 8 call points will include:
+    #   get_fee_interactive: multiple calls ("bitcoins")
+    #   withdraw_interactive: multiple calls ("BTC", "bitcoins")
+    btc = zero_less_than_satoshi(Decimal(btc).quantize(SATOSHI_PLACES))
+    
+    expanded_display_str = ""
+    if btc < 1 and btc > 0:
+        expanded_display_str = " ({} mbtc".format((btc*1000).quantize(SATOSHI_MBTC_PLACES))
+        # following may be useful in future
+        # if btc < 0.001:
+        #    expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
+        expanded_display_str += ")"
+    return "{0} btc{1}".format(btc,expanded_display_str)
 
 def bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
