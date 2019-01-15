@@ -1022,9 +1022,12 @@ if __name__ == "__main__":
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
     parser.add_argument('-v', action='store_const', default=0, dest='verbose_mode', const=1,
                         help='increase output verbosity')
+    parser.add_argument('-s', action='store_const', default=0, dest='single_safety_confirm_mode', const=1,
+                        help='suppress repeated safety prompts')
     args = parser.parse_args()
 
     verbose_mode = args.verbose_mode
+    single_safety_confirm_mode = args.single_safety_confirm_mode
 
     global bitcoind, bitcoin_cli, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
