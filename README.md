@@ -21,7 +21,8 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * needs upgrade of fee transaction estimation to work best
   4. **fix-fees**: adjust fee estimate in sequential signing to account for eventual complete-key (m keys) signage
 * under revision
-  * centralized processing of BTC display w mBTC
+  * **btc-display-consolidate**: centralized processing of BTC display w mBTC
+    * testing branch: btc-display-testing2
   * permit single confirm for safety checklist
     * remove repeated confirmations for safety checklist w e.g. global toggle
   * increment qr filename to allow multiple transactions offline
