@@ -736,7 +736,15 @@ def safety_checklist():
         "Are smartphones and all other nearby devices turned off and in a Faraday bag?"]
 
     for check in checks:
-        answer = raw_input(check + " (y/n)?")
+        if not single_safety_confirm_mode:
+            answer = raw_input(check + " (y/n)?")
+            if answer.upper() != "Y":
+                print "\n Safety check failed. Exiting."
+                sys.exit()
+        else:
+            print check
+    if single_safety_confirm_mode:
+        answer = raw_input("\nconfirm the above (y/n): ")
         if answer.upper() != "Y":
             print "\n Safety check failed. Exiting."
             sys.exit()
