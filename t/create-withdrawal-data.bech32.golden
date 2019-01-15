@@ -15,19 +15,19 @@ input a filename located in the current directory which contains the raw transac
 (If the transaction data is over ~4000 characters long, you _must_ use a file.):
 
 Transaction data found for source address.
-TOTAL unspent amount for this raw transaction: 0.99891193 BTC
+TOTAL unspent amount for this raw transaction: 0.99891193 btc (998.91193 mbtc)
 
 How many private keys will you be signing this transaction with? 
 #: Key #1: Key #2: 
 Enter fee rate.
 Satoshis per vbyte: 
-Based on the provided rate, the fee will be 0.00002210 bitcoin.
+Based on the provided rate, the fee will be 0.00002210 btc (0.02210 mbtc).
 Confirm? (y/n): 
 Please enter the decimal amount (in bitcoin) to withdraw to the destination address.
 
 Example: For 2.3 bitcoins, enter "2.3".
 
-After a fee of 0.00002210, you have 0.99888983 bitcoins available to withdraw.
+After a fee of 0.00002210 btc (0.02210 mbtc), you have 0.99888983 btc (998.88983 mbtc) available to withdraw.
 
 *** Technical note for experienced Bitcoin users:  If the withdrawal amount & fee are cumulatively less than the total amount of the unspent transactions, the remainder will be sent back to the same cold storage address as change. ***
 
@@ -35,10 +35,10 @@ Amount to send to tb1qee3t5sd9ls6alawew56qqnucf44gj7taslg8xr (leave blank to wit
 Is this data correct?
 *** WARNING: Incorrect data may lead to loss of funds ***
 
-0.99891193 BTC in unspent supplied transactions
-0 BTC going back to cold storage address 2N93du8YobdgsHyu3qgBvSyhGUT52utMNeA
-0.99888983 BTC going to destination address tb1qee3t5sd9ls6alawew56qqnucf44gj7taslg8xr
-Fee amount: 0.00002210
+0.99891193 btc (998.91193 mbtc) in unspent supplied transactions
+0 btc going back to cold storage address 2N93du8YobdgsHyu3qgBvSyhGUT52utMNeA
+0.99888983 btc (998.88983 mbtc) going to destination address tb1qee3t5sd9ls6alawew56qqnucf44gj7taslg8xr
+Fee amount: 0.00002210 btc (0.02210 mbtc)
 
 Signing with private keys: 
 cQCrT9Ncs9729ao7jbmAWrD9z7tF64s2yKzmD6nkiLAi9sXVZWAn

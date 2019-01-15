@@ -35,17 +35,17 @@ input a filename located in the current directory which contains the raw transac
 (If the transaction data is over ~4000 characters long, you _must_ use a file.):
 
 Transaction data found for source address.
-TOTAL unspent amount for this raw transaction: 0.20000000 BTC
+TOTAL unspent amount for this raw transaction: 0.20000000 btc (200.00000 mbtc)
 
 How many private keys will you be signing this transaction with? 
 #: Key #1: 
 Is this data correct?
 *** WARNING: Incorrect data may lead to loss of funds ***
 
-0.20000000 BTC in unspent supplied transactions
-0 BTC going back to cold storage address 2MvQKEWTdtH7uM5C72quuMukWNFkFYjm34N
-0.19998020 BTC going to destination address mxBQD1QAYpwiudaCJdRhE9QSW9cokafJ99
-Fee amount: 0.00001980
+0.20000000 btc (200.00000 mbtc) in unspent supplied transactions
+0 btc going back to cold storage address 2MvQKEWTdtH7uM5C72quuMukWNFkFYjm34N
+0.19998020 btc (199.98020 mbtc) going to destination address mxBQD1QAYpwiudaCJdRhE9QSW9cokafJ99
+Fee amount: 0.00001980 btc (0.01980 mbtc)
 
 Signing with private keys: 
 cPSsBu9SyNVAS2Evy3m4ELFx7KGnudH3N77Es83nafa2xVWJGRSe
