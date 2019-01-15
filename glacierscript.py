@@ -425,6 +425,14 @@ def check_fee_to_input_amt(fee, input_amount):
         print "ERROR: Your fee is greater than the sum of your unspent transactions.  Try using larger unspent transactions. Exiting..."
         sys.exit()
 
+def zero_less_than_satoshi(btc):
+    # less than a satoshi due to weird floating point imprecision
+    # this originally applied only to change amount, but display problems can also happen with 0 Decimals
+    #   if attempt to display 0 with Decimal to satoshi will get 0E-8 (noted on consolidating btc display)
+    if btc < 1e-8:
+        btc = 0
+    return btc
+
 def btc_display(btc):
     # streamline display of btc, including mbtc if < 1 btc & microbtc if < 1 mbtc
     #   reduce user errors (e.g. w counting decimals in fee checking)
@@ -433,9 +441,10 @@ def btc_display(btc):
     #   get_fee_interactive: multiple calls ("bitcoins")
     #   withdraw_interactive: multiple calls ("BTC", "bitcoins")
     # commit sequence: add function & new globals, call-commits, update testing
-    btc = Decimal(btc).quantize(SATOSHI_PLACES)
+    btc = zero_less_than_satoshi(Decimal(btc).quantize(SATOSHI_PLACES))
+    
     expanded_display_str = ""
-    if btc < 1:
+    if btc < 1 and btc > 0:
         expanded_display_str = " ({} mbtc".format((btc*1000).quantize(SATOSHI_MBTC_PLACES))
         #if btc < 0.001:
         #    expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
@@ -650,9 +659,10 @@ def withdrawal_amounts_interactive(input_amount, fee, dest_address, source_addre
 
     change_amount = input_amount - withdrawal_amount - fee
 
+    change_amount = zero_less_than_satoshi(change_amount)
     # less than a satoshi due to weird floating point imprecision
-    if change_amount < 1e-8:
-        change_amount = 0
+    #if change_amount < 1e-8:
+    #    change_amount = 0
 
     if change_amount > 0:
         print "{0} being returned to cold storage address address {1}.".format(btc_display(change_amount), source_address)
