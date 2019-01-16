@@ -459,7 +459,7 @@ def bitcoin_cli_call(cmd="", args="", **optargs):
     #  call_type: if 1 use subprocess.call instead of .checkoutput
     #  stdout or stderr: if passed here then pass along to subprocess calls
     # defaults paramters: bitcoin_cli, subprocess.check_output, shell=True
-    daemon_or_client = bitcoind if optargs.get('use_bitcoind', None) is 1 else bitcoin_cli
+    daemon_or_client = bitcoind if optargs.get('use_bitcoind', None) else bitcoin_cli
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0}{1}{2}".format(daemon_or_client, cmd, args)
@@ -468,7 +468,7 @@ def bitcoin_cli_call(cmd="", args="", **optargs):
     for var in ('stdout', 'stderr'):
         if var in optargs: subprocess_args.update({ var: optargs.get(var) })
 
-    if optargs.get('call_type', None) is 1:
+    if optargs.get('call_type', None):
         cmd_output = subprocess.call(full_cmd, **subprocess_args)
     else:
         cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
