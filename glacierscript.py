@@ -263,13 +263,13 @@ def ensure_bitcoind_running():
     # 2. Remove this -deprecatedrpc=signrawtransaction
     # 3. Change getaddressesbyaccount to getaddressesbylabel
     # 4. Remove this -deprecatedrpc=accounts
-    bitcoin_cli_call("","-daemon -connect=0.0.0.0", use_bitcoind=1, call_type=1, stdout=devnull, stderr=devnull)
+    bitcoin_daemon_call("", "-daemon -connect=0.0.0.0")
 
     # verify bitcoind started up and is functioning correctly
     times = 0
     while times <= 20:
         times += 1
-        if bitcoin_cli_call("getnetworkinfo", "", call_type=1, stdout=devnull, stderr=devnull) == 0:
+        if bitcoin_cli_call_silent_no_output_check("getnetworkinfo", "") == 0:
             return
         time.sleep(0.5)
 
@@ -301,7 +301,7 @@ def get_address_for_wif_privkey(privkey):
     label = random.randint(0, 2**128)
 
     ensure_bitcoind_running()
-    bitcoin_cli_call("importprivkey", "{0} {1}".format(privkey, label), call_type=1)
+    bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
     addresses = bitcoin_cli_call("getaddressesbylabel", label)
 
     # extract address from JSON output
@@ -325,7 +325,7 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     """
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(bitcoin_cli_call("addmultisigaddress", argstring))
+    return bitcoin_cli_call_json("addmultisigaddress", argstring)
 
 def get_utxos(tx, address):
     """
@@ -370,7 +370,7 @@ def parse_part_signed_tx(source_address):
     # outputs parsed: redeem_script, dest_address, change_amount, withdrawal_amount, num_tx
     part_signed_tx_hex = get_raw_tx_interactive("For the partially-signed transaction")
 
-    part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_tx_hex))
+    part_signed_tx = bitcoin_cli_call_json("decoderawtransaction",part_signed_tx_hex)
     redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
     num_tx = len(part_signed_tx["vin"])
 
@@ -457,6 +457,51 @@ def btc_display(btc):
     return "{0} btc{1}".format(btc,expanded_display_str)
 
 def bitcoin_cli_call(cmd="", args="", **optargs):
+    return process_bitcoin_cli_call(cmd, args, **optargs)
+def bitcoin_cli_call_json(cmd="", args="", **optargs):
+    return json.loads(process_bitcoin_cli_call(cmd, args, **optargs))
+def bitcoin_cli_call_no_output_check(cmd="", args="", **optargs):
+    optargs.update({'call_type': 1})
+    return process_bitcoin_cli_call(cmd, args, **optargs)
+def bitcoin_cli_call_silent_no_output_check(cmd="", args="", **optargs):
+    devnull = open("/dev/null")
+    optargs.update({'stdout': devnull, 'stderr': devnull})
+    return bitcoin_cli_call_no_output_check(cmd, args, **optargs)
+def bitcoin_daemon_call(cmd="", args="", **optargs):
+    optargs.update({'use_bitcoind': 1})
+    return bitcoin_cli_call_silent_no_output_check(cmd, args, **optargs)
+
+# cli calls:
+#   considerations:
+#       cli v d (only 1)
+#       json (~5) v not
+#       subprocess: call (only 3) v checkoutput
+#       stdout/stederr to devnull (only 2)
+#       strip (~2) v not
+#   ensure bitcoind running:
+#       bitcoin_cli_call("","-daemon -connect=0.0.0.0", use_bitcoind=1, call_type=1, stdout=devnull, stderr=devnull):
+#       bitcoin_cli_call("getnetworkinfo", "", call_type=1, stdout=devnull, stderr=devnull)
+#       bitcoin_cli_call("getnetworkinfo","")
+#   get_address_for_wif_privkey
+#       bitcoin_cli_call("importprivkey", "{0} {1}".format(privkey, label), call_type=1)
+#       bitcoin_cli_call("getaddressesbylabel", label)
+#   addmultisigaddress
+#       bitcoin_cli_call("addmultisigaddress", argstring)) -> json
+#   parse_part_signed_tx
+#       bitcoin_cli_call("decoderawtransaction",part_signed_tx_hex)) -> json
+#   create_unsigned_transaction
+#       bitcoin_cli_call("createrawtransaction", argstring).strip()
+#   sign_transaction
+#       bitcoin_cli_call("signrawtransactionwithkey", argstring_2).strip()
+#   num_required_keys_from_redeem
+#       bitcoin_cli_call("decodescript",redeem_script)) -> json
+#   get_fee_interactive
+#       bitcoin_cli_call("decoderawtransaction", signed_tx["hex"])) -> json
+#   withdraw_interactive
+#       bitcoin_cli_call("decoderawtransaction", hex_tx)) -> json
+
+
+def process_bitcoin_cli_call(cmd="", args="", **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
     #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
@@ -551,7 +596,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     return signed_tx
 
 def num_required_keys_from_redeem(redeem_script):
-    decoded_redeem_script = json.loads(bitcoin_cli_call("decodescript",redeem_script))
+    decoded_redeem_script = bitcoin_cli_call_json("decodescript",redeem_script)
     return decoded_redeem_script["reqSigs"]
 
 def num_cur_signatures_from_witness(decoded_tx_witness):
@@ -612,7 +657,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction", signed_tx["hex"]))
+        decoded_tx = bitcoin_cli_call_json("decoderawtransaction", signed_tx["hex"])
         
         # estimate tx size - depends on whether have all required sigs now
         if not signed_tx["complete"]:
@@ -917,7 +962,7 @@ def withdraw_interactive():
                 hex_tx = open(hex_tx).read().strip()
             # end block to be replaced
 
-            tx = json.loads(bitcoin_cli_call("decoderawtransaction", hex_tx))
+            tx = bitcoin_cli_call_json("decoderawtransaction", hex_tx)
             input_txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
