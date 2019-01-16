@@ -26,6 +26,7 @@ Glacier is a protocol for secure cold storage of bitcoins.
   6. **qr-increment**: increment qr filename to allow multiple transactions offline
     * modify qr function to increment, alter calls to exclude suffix, and in makefile remove PNGs w tests to pass make
   7. **single-safety-confirm**: `-s` flag toggles one safety checklist confirmation input (useful for testing on mainnet)
+  8. merge-in of upstream v17 and hex-patch commits (into master) 1/16/19
     
 ### features / branches for fork
 * under revision:
