@@ -882,7 +882,7 @@ def withdraw_interactive():
 
         source_address = raw_input("\nSource cold storage address: ")
 
-        if re_sign_mode is not 1:
+        if not re_sign_mode:
             redeem_script = raw_input("\nRedemption script for source cold storage address: ")
             dest_address = raw_input("\nDestination address: ")
             num_tx = int(raw_input("\nHow many unspent transactions will you be using for this withdrawal? "))
@@ -939,7 +939,7 @@ def withdraw_interactive():
 
         input_amount = utxo_sum
 
-        if re_sign_mode is not 1:
+        if not re_sign_mode:
             fee = get_fee_interactive(
                 source_address, keys, addresses, redeem_script, input_txs)
             check_fee_to_input_amt(fee, input_amount)
@@ -977,7 +977,7 @@ def withdraw_interactive():
     #### Calculate Transaction ####
     print "\nCalculating transaction...\n"
 
-    if re_sign_mode is not 1:
+    if not re_sign_mode:
         unsigned_tx = create_unsigned_transaction(
             source_address, addresses, redeem_script, input_txs)
 
