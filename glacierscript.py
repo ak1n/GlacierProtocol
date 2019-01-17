@@ -115,13 +115,13 @@ def bitcoin_cli_call_no_output_check(cmd, args, **kwargs):
     kwargs.update({'subprocess_call': 1})
     return process_bitcoin_cli_call(cmd, args, **kwargs)
 
-def bitcoin_daemon_call(cmd, args, **kwargs):
+def bitcoin_daemon_call(args, **kwargs):
     """
     Run `bitcoind` using subprocess.call
     silence output via stdout & stderr to devnull
     """
     kwargs.update({'use_bitcoind': 1, 'silent': True})
-    return bitcoin_cli_call_no_output_check(cmd, args, **kwargs)
+    return bitcoin_cli_call_no_output_check("", args, **kwargs)
 
 def process_bitcoin_cli_call(cmd, args, **kwargs):
     """
@@ -320,7 +320,7 @@ def ensure_bitcoind_running():
     # message (to /dev/null) and exit.
     #
     # -connect=0.0.0.0 because we're doing local operations only (and have no network connection anyway)
-    bitcoin_daemon_call("", "-daemon -connect=0.0.0.0")
+    bitcoin_daemon_call("-daemon -connect=0.0.0.0")
 
     # verify bitcoind started up and is functioning correctly
     times = 0
