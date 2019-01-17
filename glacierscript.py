@@ -114,15 +114,15 @@ def bitcoin_daemon_call(cmd, args, **kwargs):
 
 def process_bitcoin_cli_call(cmd, args, **kwargs):
     # all bitcoind & bitcoin-cli calls to go through this function
-    # kwargs parsing:
-    #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
-    #  subprocess_call: if 1 use subprocess.call instead of .checkoutput
-    #  stdout or stderr: if passed here then pass along to subprocess calls
-    # defaults paramters: bitcoin_cli, subprocess.check_output, shell=True
-    daemon_or_client = bitcoind if kwargs.get('use_bitcoind', None) else bitcoin_cli
+    # default parameters:
+    #   bitcoin-cli (rather than bitcoind w use_bitcoind)
+    #   subprocess.check_output (rather than subprocess.call w subprocess_call)
+    #   shell=True in subprocess_args (optional w flags: stdout/stderr to devnull)
+
+    daemon_or_client = "bitcoind " if kwargs.get('use_bitcoind', None) else "bitcoin-cli"
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
-    full_cmd = "{0}{1}{2}".format(daemon_or_client, cmd, args)
+    full_cmd = "{0} {1}{2}{3}".format(daemon_or_client, cli_args, cmd, args)
     subprocess_args = { 'shell': True }
     verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
     for var in ('stdout', 'stderr'):
@@ -1057,11 +1057,9 @@ if __name__ == "__main__":
     verbose_mode = args.verbose_mode
     single_safety_confirm_mode = args.single_safety_confirm_mode
 
-    global bitcoind, bitcoin_cli, wif_prefix
+    global cli_args, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
     wif_prefix = "EF" if args.testnet else "80"
-    bitcoind = "bitcoind " + cli_args
-    bitcoin_cli = "bitcoin-cli " + cli_args
 
     if args.program == "entropy":
         entropy(args.num_keys, args.rng)
