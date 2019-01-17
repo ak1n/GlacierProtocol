@@ -463,6 +463,12 @@ def bitcoin_cli_call_no_output_check(cmd, args, **optargs):
     optargs.update({'subprocess_call': 1})
     return bitcoin_cli_call(cmd, args, **optargs)
     
+def bitcoin_daemon_call(cmd, args, **optargs):
+    # following inclusion of stdout/stderr is temporary - will revise w main cli fn
+    devnull = open("/dev/null")
+    optargs.update({'stdout': devnull, 'stderr': devnull, 'use_bitcoind': 1})
+    return bitcoin_cli_call_no_output_check(cmd, args, **optargs)
+    
 def bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
