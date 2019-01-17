@@ -456,39 +456,39 @@ def btc_display(btc):
         expanded_display_str += ")"
     return "{0} btc{1}".format(btc,expanded_display_str)
 
-def bitcoin_cli_call_json(cmd, args, **optargs):
-    return json.loads(process_bitcoin_cli_call(cmd, args, **optargs))
+def bitcoin_cli_call_json(cmd, args, **kwargs):
+    return json.loads(process_bitcoin_cli_call(cmd, args, **kwargs))
 
-def bitcoin_cli_call(cmd, args, **optargs):
-    return process_bitcoin_cli_call(cmd, args, **optargs)
+def bitcoin_cli_call(cmd, args, **kwargs):
+    return process_bitcoin_cli_call(cmd, args, **kwargs)
 
-def bitcoin_cli_call_no_output_check(cmd, args, **optargs):
-    optargs.update({'subprocess_call': 1})
-    return process_bitcoin_cli_call(cmd, args, **optargs)
+def bitcoin_cli_call_no_output_check(cmd, args, **kwargs):
+    kwargs.update({'subprocess_call': 1})
+    return process_bitcoin_cli_call(cmd, args, **kwargs)
     
-def bitcoin_daemon_call(cmd, args, **optargs):
+def bitcoin_daemon_call(cmd, args, **kwargs):
     # following inclusion of stdout/stderr is temporary - will revise w main cli fn
     devnull = open("/dev/null")
-    optargs.update({'stdout': devnull, 'stderr': devnull, 'use_bitcoind': 1})
-    return bitcoin_cli_call_no_output_check(cmd, args, **optargs)
+    kwargs.update({'stdout': devnull, 'stderr': devnull, 'use_bitcoind': 1})
+    return bitcoin_cli_call_no_output_check(cmd, args, **kwargs)
     
-def process_bitcoin_cli_call(cmd, args, **optargs):
+def process_bitcoin_cli_call(cmd, args, **kwargs):
     # all bitcoind & bitcoin-cli calls to go through this function
-    # optargs parsing:
+    # kwargs parsing:
     #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
     #  subprocess_call: if 1 use subprocess.call instead of .checkoutput
     #  stdout or stderr: if passed here then pass along to subprocess calls
     # defaults paramters: bitcoin_cli, subprocess.check_output, shell=True
-    daemon_or_client = bitcoind if optargs.get('use_bitcoind', None) else bitcoin_cli
+    daemon_or_client = bitcoind if kwargs.get('use_bitcoind', None) else bitcoin_cli
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0}{1}{2}".format(daemon_or_client, cmd, args)
     subprocess_args = { 'shell': True }
     verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
     for var in ('stdout', 'stderr'):
-        if var in optargs: subprocess_args.update({ var: optargs.get(var) })
+        if var in kwargs: subprocess_args.update({ var: kwargs.get(var) })
 
-    if optargs.get('subprocess_call', None):
+    if kwargs.get('subprocess_call', None):
         cmd_output = subprocess.call(full_cmd, **subprocess_args)
     else:
         cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
