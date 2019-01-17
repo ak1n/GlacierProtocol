@@ -455,13 +455,16 @@ def btc_display(btc):
         #    expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
         expanded_display_str += ")"
     return "{0} btc{1}".format(btc,expanded_display_str)
-    
+
 def bitcoin_cli_call_json(cmd, args, **optargs):
-    return json.loads(bitcoin_cli_call(cmd, args, **optargs))
-    
+    return json.loads(process_bitcoin_cli_call(cmd, args, **optargs))
+
+def bitcoin_cli_call(cmd, args, **optargs):
+    return process_bitcoin_cli_call(cmd, args, **optargs)
+
 def bitcoin_cli_call_no_output_check(cmd, args, **optargs):
     optargs.update({'subprocess_call': 1})
-    return bitcoin_cli_call(cmd, args, **optargs)
+    return process_bitcoin_cli_call(cmd, args, **optargs)
     
 def bitcoin_daemon_call(cmd, args, **optargs):
     # following inclusion of stdout/stderr is temporary - will revise w main cli fn
@@ -469,7 +472,7 @@ def bitcoin_daemon_call(cmd, args, **optargs):
     optargs.update({'stdout': devnull, 'stderr': devnull, 'use_bitcoind': 1})
     return bitcoin_cli_call_no_output_check(cmd, args, **optargs)
     
-def bitcoin_cli_call(cmd, args, **optargs):
+def process_bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
     #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
