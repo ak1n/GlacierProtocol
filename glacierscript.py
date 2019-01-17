@@ -455,6 +455,9 @@ def btc_display(btc):
         #    expanded_display_str += " = {} micro-btc".format(Decimal(btc*1000*1000).quantize(SATOSHI_MICROBTC_PLACES))
         expanded_display_str += ")"
     return "{0} btc{1}".format(btc,expanded_display_str)
+    
+def bitcoin_cli_call_json(cmd, args, **optargs):
+    return json.loads(bitcoin_cli_call(cmd, args, **optargs))
 
 def bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
