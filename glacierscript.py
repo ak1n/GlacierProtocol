@@ -458,7 +458,11 @@ def btc_display(btc):
     
 def bitcoin_cli_call_json(cmd, args, **optargs):
     return json.loads(bitcoin_cli_call(cmd, args, **optargs))
-
+    
+def bitcoin_cli_call_no_output_check(cmd, args, **optargs):
+    optargs.update({'call_type': 1})
+    return bitcoin_cli_call(cmd, args, **optargs)
+    
 def bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
