@@ -325,7 +325,7 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     """
     address_string = json.dumps(addresses_or_pubkeys)
     argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return json.loads(bitcoin_cli_call("addmultisigaddress", argstring))
+    return bitcoin_cli_call_json("addmultisigaddress", argstring)
 
 def get_utxos(tx, address):
     """
@@ -370,7 +370,7 @@ def parse_part_signed_tx(source_address):
     # outputs parsed: redeem_script, dest_address, change_amount, withdrawal_amount, num_tx
     part_signed_tx_hex = get_raw_tx_interactive("For the partially-signed transaction")
 
-    part_signed_tx = json.loads(bitcoin_cli_call("decoderawtransaction",part_signed_tx_hex))
+    part_signed_tx = bitcoin_cli_call_json("decoderawtransaction",part_signed_tx_hex)
     redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
     num_tx = len(part_signed_tx["vin"])
 
@@ -554,7 +554,7 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
     return signed_tx
 
 def num_required_keys_from_redeem(redeem_script):
-    decoded_redeem_script = json.loads(bitcoin_cli_call("decodescript",redeem_script))
+    decoded_redeem_script = bitcoin_cli_call_json("decodescript",redeem_script)
     return decoded_redeem_script["reqSigs"]
 
 def num_cur_signatures_from_witness(decoded_tx_witness):
@@ -615,7 +615,7 @@ def get_fee_interactive(source_address, keys, destinations, redeem_script, input
         signed_tx = sign_transaction(source_address, keys,
                                      redeem_script, unsigned_tx, input_txs)
 
-        decoded_tx = json.loads(bitcoin_cli_call("decoderawtransaction", signed_tx["hex"]))
+        decoded_tx = bitcoin_cli_call_json("decoderawtransaction", signed_tx["hex"])
         
         # estimate tx size - depends on whether have all required sigs now
         if not signed_tx["complete"]:
@@ -920,7 +920,7 @@ def withdraw_interactive():
                 hex_tx = open(hex_tx).read().strip()
             # end block to be replaced
 
-            tx = json.loads(bitcoin_cli_call("decoderawtransaction", hex_tx))
+            tx = bitcoin_cli_call_json("decoderawtransaction", hex_tx)
             input_txs.append(tx)
             utxos += get_utxos(tx, source_address)
 
