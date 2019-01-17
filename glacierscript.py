@@ -139,6 +139,7 @@ def process_bitcoin_cli_call(cmd, args, **kwargs):
     all bitcoin-cli & bitcoind calls should go through this function
     """
     daemon_or_client = "bitcoind " if kwargs.get('use_bitcoind', None) else "bitcoin-cli"
+    subfunction = subprocess.call if kwargs.get('subprocess_call', None) else subprocess.check_output
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0} {1}{2}{3}".format(daemon_or_client, cli_args, cmd, args)
@@ -146,11 +147,7 @@ def process_bitcoin_cli_call(cmd, args, **kwargs):
     verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
     for var in ('stdout', 'stderr'):
         if var in kwargs: subprocess_args.update({ var: kwargs.get(var) })
-
-    if kwargs.get('subprocess_call', None):
-        cmd_output = subprocess.call(full_cmd, **subprocess_args)
-    else:
-        cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
+    cmd_output = subfunction(full_cmd, **subprocess_args)
     verbose("bitcoin cli call output:\n  {0}\n".format(cmd_output))
     return cmd_output
 
