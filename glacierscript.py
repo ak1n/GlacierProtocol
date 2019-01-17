@@ -301,7 +301,7 @@ def get_address_for_wif_privkey(privkey):
     label = random.randint(0, 2**128)
 
     ensure_bitcoind_running()
-    bitcoin_cli_call("importprivkey", "{0} {1}".format(privkey, label), call_type=1)
+    bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
     addresses = bitcoin_cli_call("getaddressesbylabel", label)
 
     # extract address from JSON output
