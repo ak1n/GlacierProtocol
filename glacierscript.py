@@ -263,7 +263,7 @@ def ensure_bitcoind_running():
     # 2. Remove this -deprecatedrpc=signrawtransaction
     # 3. Change getaddressesbyaccount to getaddressesbylabel
     # 4. Remove this -deprecatedrpc=accounts
-    bitcoin_cli_call("","-daemon -connect=0.0.0.0", use_bitcoind=1, subprocess_call=1, stdout=devnull, stderr=devnull)
+    bitcoin_daemon_call("", "-daemon -connect=0.0.0.0")
 
     # verify bitcoind started up and is functioning correctly
     times = 0
