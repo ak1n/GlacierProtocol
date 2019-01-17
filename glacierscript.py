@@ -140,9 +140,7 @@ def process_bitcoin_cli_call(cmd, args, **kwargs):
     subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
     silent = kwargs.pop('silent', False)
     if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
-    if cmd is not "": cmd = " {0}".format(cmd)
-    if args is not "": args = " {0}".format(args)
-    full_cmd = "{0} {1}{2}{3}".format(daemon_or_client, cli_args, cmd, args)
+    full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, cmd, args)
     subprocess_args = { 'shell': True }
     devnull = None
     if silent:
