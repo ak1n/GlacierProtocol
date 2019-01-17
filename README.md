@@ -27,7 +27,15 @@ Glacier is a protocol for secure cold storage of bitcoins.
     * modify qr function to increment, alter calls to exclude suffix, and in makefile remove PNGs w tests to pass make
   7. **single-safety-confirm**: `-s` flag toggles one safety checklist confirmation input (useful for testing on mainnet)
   8. merge-in of upstream v17 and hex-patch commits (into master) 1/16/19
-    
+* in progress:
+  * improvement of bitcoin cli call handling including bitcoinhodler's improvements
+  * general improvements from bitcoinhodler's dev work
+  * related dev branches:
+    * **cli-fn-mods-testing2** testing branch work for cli consolidation
+    * **hodler_work_integration** to-be-pushed branch
+      * reconciliation w bitcoinhodler's **clifunc** https://github.com/bitcoinhodler/GlacierProtocol/tree/clifunc
+      * compare: https://github.com/ak1n/GlacierProtocol/compare/cli-fn-mods-testing2...bitcoinhodler:clifunc
+
 ### features / branches for fork
 * under revision:
   * tailsOS supprt
