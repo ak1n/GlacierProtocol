@@ -136,9 +136,10 @@ def process_bitcoin_cli_call(cmd, args, **kwargs):
     by default shell=True used for subprocessed calls
     all bitcoin-cli & bitcoind calls should go through this function
     """
-    daemon_or_client = "bitcoind " if kwargs.get('use_bitcoind', None) else "bitcoin-cli"
-    subfunction = subprocess.call if kwargs.get('subprocess_call', None) else subprocess.check_output
-    silent = kwargs.get('silent', False)
+    daemon_or_client = "bitcoind " if kwargs.pop('use_bitcoind', None) else "bitcoin-cli"
+    subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
+    silent = kwargs.pop('silent', False)
+    if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0} {1}{2}{3}".format(daemon_or_client, cli_args, cmd, args)
