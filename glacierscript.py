@@ -456,7 +456,7 @@ def btc_display(btc):
         expanded_display_str += ")"
     return "{0} btc{1}".format(btc,expanded_display_str)
 
-def bitcoin_cli_call(cmd="", args="", **optargs):
+def bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
     #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
