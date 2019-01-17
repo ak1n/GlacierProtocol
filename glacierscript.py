@@ -269,7 +269,7 @@ def ensure_bitcoind_running():
     times = 0
     while times <= 20:
         times += 1
-        if bitcoin_cli_call("getnetworkinfo", "", call_type=1, stdout=devnull, stderr=devnull) == 0:
+        if bitcoin_cli_call_no_output_check("getnetworkinfo", "", stdout=devnull, stderr=devnull) == 0:
             return
         time.sleep(0.5)
 
