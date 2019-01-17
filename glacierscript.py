@@ -370,7 +370,7 @@ def parse_part_signed_tx(source_address):
     # outputs parsed: redeem_script, dest_address, change_amount, withdrawal_amount, num_tx
     part_signed_tx_hex = get_raw_tx_interactive("For the partially-signed transaction")
 
-    part_signed_tx = bitcoin_cli_call_json("decoderawtransaction",part_signed_tx_hex)
+    part_signed_tx = bitcoin_cli_call_json("decoderawtransaction", part_signed_tx_hex)
     redeem_script=part_signed_tx["vin"][0]["txinwitness"][-1]
     num_tx = len(part_signed_tx["vin"])
 
