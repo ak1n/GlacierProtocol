@@ -314,7 +314,6 @@ def ensure_bitcoind_running():
     """
     Start bitcoind (if it's not already running) and ensure it's functioning properly
     """
-    devnull = open("/dev/null")
 
     # start bitcoind.  If another bitcoind process is already running, this will just print an error
     # message (to /dev/null) and exit.
