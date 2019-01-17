@@ -120,9 +120,7 @@ def bitcoin_daemon_call(cmd, args, **kwargs):
     Run `bitcoind` using subprocess.call
     silence output via stdout & stderr to devnull
     """
-    # following inclusion of stdout/stderr is temporary - will revise w main cli fn
-    devnull = open("/dev/null")
-    kwargs.update({'stdout': devnull, 'stderr': devnull, 'use_bitcoind': 1})
+    kwargs.update({'use_bitcoind': 1, 'silent': True})
     return bitcoin_cli_call_no_output_check(cmd, args, **kwargs)
 
 def process_bitcoin_cli_call(cmd, args, **kwargs):
@@ -140,14 +138,19 @@ def process_bitcoin_cli_call(cmd, args, **kwargs):
     """
     daemon_or_client = "bitcoind " if kwargs.get('use_bitcoind', None) else "bitcoin-cli"
     subfunction = subprocess.call if kwargs.get('subprocess_call', None) else subprocess.check_output
+    silent = kwargs.get('silent', False)
     if cmd is not "": cmd = " {0}".format(cmd)
     if args is not "": args = " {0}".format(args)
     full_cmd = "{0} {1}{2}{3}".format(daemon_or_client, cli_args, cmd, args)
     subprocess_args = { 'shell': True }
+    devnull = None
+    if silent:
+        devnull = open("/dev/null")
+        subprocess_args.update({ 'stdout': devnull, 'stderr': devnull })
     verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
-    for var in ('stdout', 'stderr'):
-        if var in kwargs: subprocess_args.update({ var: kwargs.get(var) })
     cmd_output = subfunction(full_cmd, **subprocess_args)
+    if devnull:
+        devnull.close()
     verbose("bitcoin cli call output:\n  {0}\n".format(cmd_output))
     return cmd_output
 
@@ -330,7 +333,7 @@ def ensure_bitcoind_running():
     times = 0
     while times <= 20:
         times += 1
-        if bitcoin_cli_call_no_output_check("getnetworkinfo", "", stdout=devnull, stderr=devnull) == 0:
+        if bitcoin_cli_call_no_output_check("getnetworkinfo", "", silent=True) == 0:
             return
         time.sleep(0.5)
 
