@@ -263,7 +263,7 @@ def ensure_bitcoind_running():
     # 2. Remove this -deprecatedrpc=signrawtransaction
     # 3. Change getaddressesbyaccount to getaddressesbylabel
     # 4. Remove this -deprecatedrpc=accounts
-    bitcoin_cli_call("","-daemon -connect=0.0.0.0", use_bitcoind=1, call_type=1, stdout=devnull, stderr=devnull)
+    bitcoin_cli_call("","-daemon -connect=0.0.0.0", use_bitcoind=1, subprocess_call=1, stdout=devnull, stderr=devnull)
 
     # verify bitcoind started up and is functioning correctly
     times = 0
@@ -460,14 +460,14 @@ def bitcoin_cli_call_json(cmd, args, **optargs):
     return json.loads(bitcoin_cli_call(cmd, args, **optargs))
     
 def bitcoin_cli_call_no_output_check(cmd, args, **optargs):
-    optargs.update({'call_type': 1})
+    optargs.update({'subprocess_call': 1})
     return bitcoin_cli_call(cmd, args, **optargs)
     
 def bitcoin_cli_call(cmd, args, **optargs):
     # all bitcoind & bitcoin-cli calls to go through this function
     # optargs parsing:
     #  use_bitcoind: if 1 then bitcoind for root cmd rather than bitcoin_cli
-    #  call_type: if 1 use subprocess.call instead of .checkoutput
+    #  subprocess_call: if 1 use subprocess.call instead of .checkoutput
     #  stdout or stderr: if passed here then pass along to subprocess calls
     # defaults paramters: bitcoin_cli, subprocess.check_output, shell=True
     daemon_or_client = bitcoind if optargs.get('use_bitcoind', None) else bitcoin_cli
@@ -479,7 +479,7 @@ def bitcoin_cli_call(cmd, args, **optargs):
     for var in ('stdout', 'stderr'):
         if var in optargs: subprocess_args.update({ var: optargs.get(var) })
 
-    if optargs.get('call_type', None):
+    if optargs.get('subprocess_call', None):
         cmd_output = subprocess.call(full_cmd, **subprocess_args)
     else:
         cmd_output = subprocess.check_output(full_cmd, **subprocess_args)
