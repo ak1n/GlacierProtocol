@@ -123,7 +123,7 @@ def bitcoin_daemon_call(*args, **kwargs):
     kwargs.update({'use_bitcoind': 1, 'silent': True})
     return bitcoin_cli_call_no_output_check("", *args, **kwargs)
 
-def process_bitcoin_cli_call(cmd, *args, **kwargs):
+def process_bitcoin_cli_call(*args, **kwargs):
     """
     Run a subprocess (bitcoind or bitcoin-cli)
     Returns => return value of subprocess.call() or subprocess.check_output()
@@ -140,7 +140,7 @@ def process_bitcoin_cli_call(cmd, *args, **kwargs):
     subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
     silent = kwargs.pop('silent', False)
     if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
-    full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, cmd, *args)
+    full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, *args)
     subprocess_args = { 'shell': True }
     devnull = None
     if silent:
