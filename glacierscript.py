@@ -42,9 +42,9 @@ SATOSHI_PLACES = Decimal("0.00000001")
 SATOSHI_MBTC_PLACES = Decimal("0.00001")
 SATOSHI_MICROBTC_PLACES = Decimal("0.01")
 
-verbose_mode = 0
-re_sign_mode = 0
-single_safety_confirm_mode = 0
+verbose_mode = False
+re_sign_mode = False
+single_safety_confirm_mode = False
 
 ################################################################################################
 #
@@ -112,14 +112,14 @@ def bitcoin_cli_call_no_output_check(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.call
     """
-    return process_bitcoin_cli_call(*args, subprocess_call=1, **kwargs)
+    return process_bitcoin_cli_call(*args, subprocess_call=True, **kwargs)
 
 def bitcoin_daemon_call(*args, **kwargs):
     """
     Run `bitcoind` using subprocess.call
     silence output via stdout & stderr to devnull
     """
-    return bitcoin_cli_call_no_output_check(*args, use_bitcoind=1, silent=True, **kwargs)
+    return bitcoin_cli_call_no_output_check(*args, use_bitcoind=True, silent=True, **kwargs)
 
 def process_bitcoin_cli_call(*args, **kwargs):
     """
@@ -127,13 +127,13 @@ def process_bitcoin_cli_call(*args, **kwargs):
     Returns => return value of subprocess.call() or subprocess.check_output()
     args: for bitcoind or bitcoin-cli (e.g. decoderawtransaction)
     kwargs:
-      subprocess_call: if 1 use subprocess.call rather than subprocess.check_output
+      subprocess_call: if True use subprocess.call rather than subprocess.check_output
       use_bitcoind: use bitcoind instead of bitcoin-cli
       silent: if True, redirect stdout & stderr to /dev/null
     By default: shell=False used for subprocessed calls
     All bitcoin-cli & bitcoind calls should go through this function
     """
-    daemon_or_client = "bitcoind" if kwargs.pop('use_bitcoind', None) else "bitcoin-cli"
+    daemon_or_client = "bitcoind" if kwargs.pop('use_bitcoind', False) else "bitcoin-cli"
     subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
     silent = kwargs.pop('silent', False)
     if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
@@ -1044,9 +1044,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-n", type=int, help="Number of total keys required in an m-of-n multisig address creation (default m-of-n = 1-of-2)", default=2)
     parser.add_argument('--testnet', type=int, help=argparse.SUPPRESS)
-    parser.add_argument('-v', action='store_const', default=0, dest='verbose_mode', const=1,
+    parser.add_argument('-v', action='store_const', default=False, dest='verbose_mode', const=True,
                         help='increase output verbosity')
-    parser.add_argument('-s', action='store_const', default=0, dest='single_safety_confirm_mode', const=1,
+    parser.add_argument('-s', action='store_const', default=False, dest='single_safety_confirm_mode', const=True,
                         help='suppress repeated safety prompts')
     args = parser.parse_args()
 
@@ -1072,5 +1072,5 @@ if __name__ == "__main__":
         if not yes_no_interactive():
             print "\ncould not confirm segwit to proceed with sequential transaction signing...exiting"
             sys.exit()
-        re_sign_mode = 1
+        re_sign_mode = True
         withdraw_interactive()
