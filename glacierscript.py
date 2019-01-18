@@ -96,24 +96,24 @@ def verbose(content):
 #
 ################################################################################################
 
-def bitcoin_cli_call_json(cmd, *args, **kwargs):
+def bitcoin_cli_call_json(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.check_output, parse output as JSON
     """
-    return json.loads(process_bitcoin_cli_call(cmd, *args, **kwargs))
+    return json.loads(process_bitcoin_cli_call(*args, **kwargs))
 
-def bitcoin_cli_call(cmd, *args, **kwargs):
+def bitcoin_cli_call(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.check_output
     """
-    return process_bitcoin_cli_call(cmd, *args, **kwargs)
+    return process_bitcoin_cli_call(*args, **kwargs)
 
-def bitcoin_cli_call_no_output_check(cmd, *args, **kwargs):
+def bitcoin_cli_call_no_output_check(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.call
     """
     kwargs.update({'subprocess_call': 1})
-    return process_bitcoin_cli_call(cmd, *args, **kwargs)
+    return process_bitcoin_cli_call(*args, **kwargs)
 
 def bitcoin_daemon_call(*args, **kwargs):
     """
@@ -121,9 +121,9 @@ def bitcoin_daemon_call(*args, **kwargs):
     silence output via stdout & stderr to devnull
     """
     kwargs.update({'use_bitcoind': 1, 'silent': True})
-    return bitcoin_cli_call_no_output_check("", *args, **kwargs)
+    return bitcoin_cli_call_no_output_check(*args, **kwargs)
 
-def process_bitcoin_cli_call(cmd, *args, **kwargs):
+def process_bitcoin_cli_call(*args, **kwargs):
     """
     Run a subprocess (bitcoind or bitcoin-cli)
     Returns => return value of subprocess.call() or subprocess.check_output()
@@ -136,21 +136,29 @@ def process_bitcoin_cli_call(cmd, *args, **kwargs):
     by default shell=True used for subprocessed calls
     all bitcoin-cli & bitcoind calls should go through this function
     """
-    daemon_or_client = "bitcoind " if kwargs.pop('use_bitcoind', None) else "bitcoin-cli"
+    daemon_or_client = "bitcoind" if kwargs.pop('use_bitcoind', None) else "bitcoin-cli"
     subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
     silent = kwargs.pop('silent', False)
     if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
-    full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, cmd, *args)
-    subprocess_args = { 'shell': True }
+    #full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, cmd, *args)
+    full_cmd_list = [daemon_or_client] + cli_args_list + list(args)
+    #subprocess_args = { 'shell': True }
+    subprocess_args_list = {}
+    #subprocess_args_list = { 'shell': False }
     devnull = None
     if silent:
         devnull = open("/dev/null")
-        subprocess_args.update({ 'stdout': devnull, 'stderr': devnull })
-    verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
-    cmd_output = subfunction(full_cmd, **subprocess_args)
+        #subprocess_args.update({ 'stdout': devnull, 'stderr': devnull })
+        subprocess_args_list.update({ 'stdout': devnull, 'stderr': devnull })
+    #verbose("bitcoin cli call:\n  {0}\n".format(full_cmd))
+    verbose("bitcoin cli call:\n  {0}\n  w subprocess params: {1}".format(full_cmd_list, subprocess_args_list))
+    #print "bitcoin cli call:\n  {0}\n  subprocess params: {1}\n  subprocess: {2}".format(full_cmd_list, subprocess_args_list, subfunction)
+    #cmd_output = subfunction(full_cmd, **subprocess_args)
+    cmd_output = subfunction(full_cmd_list, **subprocess_args_list)
     if devnull:
         devnull.close()
     verbose("bitcoin cli call output:\n  {0}\n".format(cmd_output))
+    #print "bitcoin cli call output:\n  {0}\n".format(cmd_output)
     return cmd_output
 
 ################################################################################################
@@ -318,13 +326,13 @@ def ensure_bitcoind_running():
     # message (to /dev/null) and exit.
     #
     # -connect=0.0.0.0 because we're doing local operations only (and have no network connection anyway)
-    bitcoin_daemon_call("-daemon -connect=0.0.0.0")
+    bitcoin_daemon_call("-daemon", "-connect=0.0.0.0")
 
     # verify bitcoind started up and is functioning correctly
     times = 0
     while times <= 20:
         times += 1
-        if bitcoin_cli_call_no_output_check("getnetworkinfo", "", silent=True) == 0:
+        if bitcoin_cli_call_no_output_check("getnetworkinfo", silent=True) == 0:
             return
         time.sleep(0.5)
 
@@ -335,7 +343,7 @@ def require_minimum_bitcoind_version(min_version):
     Fail if the bitcoind version in use is older than required
     <min_version> - required minimum version in format of getnetworkinfo, i.e. 150100 for v0.15.1
     """
-    networkinfo = bitcoin_cli_call_json("getnetworkinfo","")
+    networkinfo = bitcoin_cli_call_json("getnetworkinfo")
 
     if int(networkinfo["version"]) < min_version:
         print "ERROR: Your bitcoind version is too old. You have {}, I need {} or newer. Exiting...".format(networkinfo["version"], min_version)
@@ -355,7 +363,8 @@ def get_address_for_wif_privkey(privkey):
     label = str(random.randint(0, 2**128))
 
     ensure_bitcoind_running()
-    bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
+    #bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
+    bitcoin_cli_call_no_output_check("importprivkey", privkey, label)
     addresses_json = bitcoin_cli_call_json("getaddressesbylabel", label)
 
     # getaddressesbylabel returns multiple addresses associated with
@@ -375,8 +384,9 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     addresses_or_pubkeys: List<string> either addresses or hex pubkeys for each of the N keys
     """
     address_string = json.dumps(addresses_or_pubkeys)
-    argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return bitcoin_cli_call_json("addmultisigaddress", argstring)
+    #argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
+    #return bitcoin_cli_call_json("addmultisigaddress", argstring)
+    return bitcoin_cli_call_json("addmultisigaddress", str(m), address_string, address_type)
 
 def get_utxos(tx, address):
     """
@@ -536,11 +546,13 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
                 "vout": int(utxo["n"])
             })
 
-    argstring = "'{0}' '{1}'".format(
-        json.dumps(inputs), json.dumps(destinations))
+    #argstring = "'{0}' '{1}'".format(
+    #    json.dumps(inputs), json.dumps(destinations))
 
-    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", argstring).strip()
-
+    #tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", argstring).strip()
+    
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", json.dumps(inputs), json.dumps(destinations)).strip()
+    
     return tx_unsigned_hex
 
 
@@ -571,9 +583,10 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
                 "redeemScript": redeem_script
             })
 
-    argstring_2 = "{0} '{1}' '{2}'".format(
-        unsigned_hex, json.dumps(keys), json.dumps(inputs))
-    signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", argstring_2)
+    #argstring_2 = "{0} '{1}' '{2}'".format(
+    #    unsigned_hex, json.dumps(keys), json.dumps(inputs))
+    #signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", argstring_2)
+    signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", unsigned_hex, json.dumps(keys), json.dumps(inputs))
 
     return signed_tx
 
@@ -1062,8 +1075,9 @@ if __name__ == "__main__":
     verbose_mode = args.verbose_mode
     single_safety_confirm_mode = args.single_safety_confirm_mode
 
-    global cli_args, wif_prefix
+    global cli_args, cli_args_list, wif_prefix
     cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
+    cli_args_list = ["-testnet", "-rpcport={}".format(args.testnet), "-datadir=bitcoin-test-data"] if args.testnet else []
     wif_prefix = "EF" if args.testnet else "80"
 
     if args.program == "entropy":
