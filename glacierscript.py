@@ -112,16 +112,14 @@ def bitcoin_cli_call_no_output_check(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.call
     """
-    kwargs.update({'subprocess_call': 1})
-    return process_bitcoin_cli_call(*args, **kwargs)
+    return process_bitcoin_cli_call(*args, subprocess_call=1, **kwargs)
 
 def bitcoin_daemon_call(*args, **kwargs):
     """
     Run `bitcoind` using subprocess.call
     silence output via stdout & stderr to devnull
     """
-    kwargs.update({'use_bitcoind': 1, 'silent': True})
-    return bitcoin_cli_call_no_output_check(*args, **kwargs)
+    return bitcoin_cli_call_no_output_check(*args, use_bitcoind=1, silent=True, **kwargs)
 
 def process_bitcoin_cli_call(*args, **kwargs):
     """
