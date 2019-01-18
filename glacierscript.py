@@ -125,14 +125,13 @@ def process_bitcoin_cli_call(*args, **kwargs):
     """
     Run a subprocess (bitcoind or bitcoin-cli)
     Returns => return value of subprocess.call() or subprocess.check_output()
-    cmd: for bitcoind or bitcoin-cli to exec (e.g. decoderawtransaction)
-    args: for cmd
+    args: for bitcoind or bitcoin-cli (e.g. decoderawtransaction)
     kwargs:
       subprocess_call: if 1 use subprocess.call rather than subprocess.check_output
       use_bitcoind: use bitcoind instead of bitcoin-cli
       silent: if True, redirect stdout & stderr to /dev/null
-    by default shell=True used for subprocessed calls
-    all bitcoin-cli & bitcoind calls should go through this function
+    By default: shell=False used for subprocessed calls
+    All bitcoin-cli & bitcoind calls should go through this function
     """
     daemon_or_client = "bitcoind" if kwargs.pop('use_bitcoind', None) else "bitcoin-cli"
     subfunction = subprocess.call if kwargs.pop('subprocess_call', None) else subprocess.check_output
