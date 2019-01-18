@@ -122,8 +122,8 @@ def bitcoin_daemon_call(*args, **kwargs):
     """
     kwargs.update({'use_bitcoind': 1, 'silent': True})
     # LIST-STAGING
-    #return bitcoin_cli_call_no_output_check(*args, **kwargs)
-    return bitcoin_cli_call_no_output_check("", *args, **kwargs)
+    return bitcoin_cli_call_no_output_check(*args, **kwargs)
+    #return bitcoin_cli_call_no_output_check("", *args, **kwargs)
 
 def process_bitcoin_cli_call(*args, **kwargs):
     """
@@ -143,11 +143,11 @@ def process_bitcoin_cli_call(*args, **kwargs):
     silent = kwargs.pop('silent', False)
     if kwargs: raise TypeError('Unexpected **kwargs: %r' % kwargs)
     # LIST-STAGING
-    full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, *args)
-    #full_cmd = [daemon_or_client] + cli_args + list(args)
+    #full_cmd = "{0} {1} {2} {3}".format(daemon_or_client, cli_args, *args)
+    full_cmd = [daemon_or_client] + cli_args + list(args)
     # LIST-STAGING
-    subprocess_args = { 'shell': True }
-    #subprocess_args = { 'shell': False }
+    #subprocess_args = { 'shell': True }
+    subprocess_args = { 'shell': False }
     devnull = None
     if silent:
         devnull = open("/dev/null")
@@ -325,16 +325,16 @@ def ensure_bitcoind_running():
     #
     # -connect=0.0.0.0 because we're doing local operations only (and have no network connection anyway)
     # LIST-STAGING
-    bitcoin_daemon_call("-daemon -connect=0.0.0.0")
-    #bitcoin_daemon_call("-daemon", "-connect=0.0.0.0")
+    #bitcoin_daemon_call("-daemon -connect=0.0.0.0")
+    bitcoin_daemon_call("-daemon", "-connect=0.0.0.0")
 
     # verify bitcoind started up and is functioning correctly
     times = 0
     while times <= 20:
         times += 1
         # LIST-STAGING
-        if bitcoin_cli_call_no_output_check("getnetworkinfo", "", silent=True) == 0:
-        #if bitcoin_cli_call_no_output_check("getnetworkinfo", silent=True) == 0:
+        #if bitcoin_cli_call_no_output_check("getnetworkinfo", "", silent=True) == 0:
+        if bitcoin_cli_call_no_output_check("getnetworkinfo", silent=True) == 0:
             return
         time.sleep(0.5)
 
@@ -346,8 +346,8 @@ def require_minimum_bitcoind_version(min_version):
     <min_version> - required minimum version in format of getnetworkinfo, i.e. 150100 for v0.15.1
     """
     # LIST-STAGING
-    networkinfo = bitcoin_cli_call_json("getnetworkinfo","")
-    #networkinfo = bitcoin_cli_call_json("getnetworkinfo")
+    #networkinfo = bitcoin_cli_call_json("getnetworkinfo","")
+    networkinfo = bitcoin_cli_call_json("getnetworkinfo")
 
     if int(networkinfo["version"]) < min_version:
         print "ERROR: Your bitcoind version is too old. You have {}, I need {} or newer. Exiting...".format(networkinfo["version"], min_version)
@@ -368,8 +368,8 @@ def get_address_for_wif_privkey(privkey):
 
     ensure_bitcoind_running()
     # LIST-STAGING
-    bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
-    #bitcoin_cli_call_no_output_check("importprivkey", privkey, label)
+    #bitcoin_cli_call_no_output_check("importprivkey", "{0} {1}".format(privkey, label))
+    bitcoin_cli_call_no_output_check("importprivkey", privkey, label)
     addresses_json = bitcoin_cli_call_json("getaddressesbylabel", label)
 
     # getaddressesbylabel returns multiple addresses associated with
@@ -390,9 +390,9 @@ def addmultisigaddress(m, addresses_or_pubkeys, address_type='p2sh-segwit'):
     """
     address_string = json.dumps(addresses_or_pubkeys)
     # LIST-STAGING
-    argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
-    return bitcoin_cli_call_json("addmultisigaddress", argstring)
-    #return bitcoin_cli_call_json("addmultisigaddress", str(m), address_string, address_type)
+    #argstring = "{0} '{1}' '' '{2}'".format(m, address_string, address_type)
+    #return bitcoin_cli_call_json("addmultisigaddress", argstring)
+    return bitcoin_cli_call_json("addmultisigaddress", str(m), address_string, address_type)
 
 def get_utxos(tx, address):
     """
@@ -553,10 +553,10 @@ def create_unsigned_transaction(source_address, destinations, redeem_script, inp
             })
 
     # LIST-STAGING
-    argstring = "'{0}' '{1}'".format(
-        json.dumps(inputs), json.dumps(destinations))
-    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", argstring).strip()
-    #tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", json.dumps(inputs), json.dumps(destinations)).strip()
+    #argstring = "'{0}' '{1}'".format(
+    #    json.dumps(inputs), json.dumps(destinations))
+    #tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", argstring).strip()
+    tx_unsigned_hex = bitcoin_cli_call("createrawtransaction", json.dumps(inputs), json.dumps(destinations)).strip()
 
     return tx_unsigned_hex
 
@@ -589,10 +589,10 @@ def sign_transaction(source_address, keys, redeem_script, unsigned_hex, input_tx
             })
 
     # LIST-STAGING
-    argstring_2 = "{0} '{1}' '{2}'".format(
-        unsigned_hex, json.dumps(keys), json.dumps(inputs))
-    signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", argstring_2)
-    #signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", unsigned_hex, json.dumps(keys), json.dumps(inputs))
+    #argstring_2 = "{0} '{1}' '{2}'".format(
+    #    unsigned_hex, json.dumps(keys), json.dumps(inputs))
+    #signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", argstring_2)
+    signed_tx = bitcoin_cli_call_json("signrawtransactionwithkey", unsigned_hex, json.dumps(keys), json.dumps(inputs))
 
     return signed_tx
 
@@ -1083,8 +1083,8 @@ if __name__ == "__main__":
 
     global cli_args, wif_prefix
     # LIST-STAGING
-    cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
-    #cli_args = ["-testnet", "-rpcport={}".format(args.testnet), "-datadir=bitcoin-test-data"] if args.testnet else []
+    #cli_args = "-testnet -rpcport={} -datadir=bitcoin-test-data ".format(args.testnet) if args.testnet else ""
+    cli_args = ["-testnet", "-rpcport={}".format(args.testnet), "-datadir=bitcoin-test-data"] if args.testnet else []
     wif_prefix = "EF" if args.testnet else "80"
 
     if args.program == "entropy":
