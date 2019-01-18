@@ -29,6 +29,7 @@ Glacier is a protocol for secure cold storage of bitcoins.
   8. merge-in of upstream v17 and hex-patch commits (into master) 1/16/19
   9. **cli-fn-mods**: improve bitcoin cli call handling - part 1
   10. **hodler-work-integration-cli-calls**: many improvements in bitcoin-cli call functions - including specifically conversion to using lists rather than string args. see [bitcoinhodler's **clifunc**](https://github.com/bitcoinhodler/GlacierProtocol/tree/clifunc)
+  11. **better-booleans2**: streamline bools (0/1 to False/True)
 
 ### features / branches for fork
 * under revision:
