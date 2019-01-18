@@ -96,24 +96,24 @@ def verbose(content):
 #
 ################################################################################################
 
-def bitcoin_cli_call_json(cmd, *args, **kwargs):
+def bitcoin_cli_call_json(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.check_output, parse output as JSON
     """
-    return json.loads(process_bitcoin_cli_call(cmd, *args, **kwargs))
+    return json.loads(process_bitcoin_cli_call(*args, **kwargs))
 
-def bitcoin_cli_call(cmd, *args, **kwargs):
+def bitcoin_cli_call(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.check_output
     """
-    return process_bitcoin_cli_call(cmd, *args, **kwargs)
+    return process_bitcoin_cli_call(*args, **kwargs)
 
-def bitcoin_cli_call_no_output_check(cmd, *args, **kwargs):
+def bitcoin_cli_call_no_output_check(*args, **kwargs):
     """
     Run `bitcoin-cli` using subprocess.call
     """
     kwargs.update({'subprocess_call': 1})
-    return process_bitcoin_cli_call(cmd, *args, **kwargs)
+    return process_bitcoin_cli_call(*args, **kwargs)
 
 def bitcoin_daemon_call(*args, **kwargs):
     """
